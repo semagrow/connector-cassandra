@@ -40,7 +40,7 @@ public class CassandraSchemaInit {
         if (instance == null) {
             File file = null;
             try {
-                file = FileUtils.getFile("cassandra.ttl");
+                file = FileUtils.getFile("metadata.ttl");
             } catch (IOException e) {
                 e.printStackTrace();
             }
