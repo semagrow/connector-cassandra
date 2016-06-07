@@ -113,12 +113,12 @@ public class CassandraSchemaInit {
             throws MalformedQueryException, QueryEvaluationException, RepositoryException {
 
         String query = queryPrefix +
-                "SELECT ?endpoint ?address ?port ?keynote ?base WHERE { \n" +
+                "SELECT ?endpoint ?address ?port ?keyspace ?base WHERE { \n" +
                 "   ?d rdf:type cdv:cassandraDB . \n" +
                 "   ?d void:sparqlEndpoint ?endpoint . \n" +
                 "   ?d cdv:address ?address . \n" +
                 "   ?d cdv:port ?port . \n" +
-                "   ?d cdv:keynote ?keynote . \n" +
+                "   ?d cdv:keyspace ?keyspace . \n" +
                 "   ?d cdv:base ?base . \n" +
                 "}";
 
@@ -133,7 +133,7 @@ public class CassandraSchemaInit {
                 cs.setCredentials(
                         bs.getValue("address").stringValue(),
                         Integer.valueOf(bs.getValue("port").stringValue()),
-                        bs.getValue("keynote").stringValue()
+                        bs.getValue("keyspace").stringValue()
                 );
             }
         } finally {
