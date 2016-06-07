@@ -20,6 +20,7 @@ public class CassandraSchema {
     private Map<String, List<String>> clusteringColumns = new HashMap<>();
     private Map<String, Set<String>> regularColumns = new HashMap<>();
     private Map<String, Set<String>> indexedColumns = new HashMap<>();
+    private Map<String, Set<String>> complexColumns = new HashMap<>();
 
     /* notice: the clustering order must be preserved in the list */
 
@@ -31,6 +32,7 @@ public class CassandraSchema {
         this.clusteringColumns.put(table, new ArrayList<>());
         this.regularColumns.put(table, new HashSet<>());
         this.indexedColumns.put(table, new HashSet<>());
+        this.complexColumns.put(table, new HashSet<>());
     }
 
     public void addPartitionColumn(String table, String column) {
@@ -53,6 +55,10 @@ public class CassandraSchema {
 
     public void addIndex(String table, String column) {
         this.indexedColumns.get(table).add(column);
+    }
+
+    public void makeComplex(String table, String column) {
+        this.complexColumns.get(table).add(column);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +99,10 @@ public class CassandraSchema {
         return indexedColumns.get(table).contains(column);
     }
 
+    private boolean hasComplexDatatype(String table, String column) {
+        return complexColumns.get(table).contains(column);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void setCredentials(String address, int port, String keyspace) {
@@ -128,21 +138,21 @@ public class CassandraSchema {
 
         if (!canRestrictPartitionColumns(table, restrictedPartitionColumns)) {
             for (String column: restrictedPartitionColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
         }
         if (!canRestrictClusteringColumns(table, restricedClusteringColumns)) {
             for (String column: restricedClusteringColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
         }
         if (!canRestrictRegularColumns(table, restrictedRegularColumns)) {
             for (String column: restrictedRegularColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
@@ -161,7 +171,7 @@ public class CassandraSchema {
         return (restrictedPartitionColumns.isEmpty() ||
                 restrictedPartitionColumns.equals(partitionColumns) ||
                 restrictedPartitionColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> (this.hasIndex(table, column) && !this.hasComplexDatatype(table,column)))
         );
     }
 
@@ -179,7 +189,7 @@ public class CassandraSchema {
                 restrictions.indexOf(false) == -1 ||
                 restrictions.lastIndexOf(true) < restrictions.indexOf(false) ||
                 clusteringColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> this.hasIndex(table, column) && !this.hasComplexDatatype(table,column))
         );
     }
 
@@ -189,7 +199,7 @@ public class CassandraSchema {
 
         return (restrictedRegularColumns.isEmpty() ||
                 restrictedRegularColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> this.hasIndex(table, column) && !this.hasComplexDatatype(table,column))
         );
     }
 }

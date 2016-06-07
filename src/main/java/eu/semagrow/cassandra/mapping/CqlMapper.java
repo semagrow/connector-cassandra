@@ -1,5 +1,6 @@
 package eu.semagrow.cassandra.mapping;
 
+import eu.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -45,6 +46,12 @@ public class CqlMapper {
                 return v.stringValue();
             }
             else {
+                if (((Literal) v).getDatatype().equals(CDT.UDT)) {
+                    return v.stringValue();
+                }
+                if (((Literal) v).getDatatype().equals(CDT.SET)) {
+                    return v.stringValue();
+                }
                 return "\'" + v.stringValue() + "\'";
             }
 

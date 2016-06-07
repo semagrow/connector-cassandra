@@ -63,34 +63,34 @@ public class RdfMapper {
             return vf.createLiteral(row.getBool(columnname));
         }
         if (dataType.equals(DataType.blob())) {
-            return vf.createLiteral(row.getString(columnname), CDT.BLOB);
+            return vf.createLiteral(row.getObject(columnname).toString(), CDT.BLOB);
         }
         if (dataType.equals(DataType.date())) {
-            return vf.createLiteral(row.getString(columnname), CDT.DATE);
+            return vf.createLiteral(row.getDate(columnname).toString(), CDT.DATE);
         }
         if (dataType.equals(DataType.time())) {
-            return vf.createLiteral(row.getString(columnname), CDT.TIME);
+            return vf.createLiteral(row.getObject(columnname).toString(), CDT.TIME);
         }
         if (dataType.equals(DataType.timestamp())) {
-            return vf.createLiteral(row.getString(columnname), CDT.TIMESTAMP);
+            return vf.createLiteral(row.getTimestamp(columnname).toString(), CDT.TIMESTAMP);
         }
         if (dataType.equals(DataType.timeuuid())) {
-            return vf.createLiteral(row.getString(columnname), CDT.TIMEUUID);
+            return vf.createLiteral(row.getObject(columnname).toString(), CDT.TIMEUUID);
         }
         if (dataType.isFrozen()) {
             if (dataType.getName().toString().equals("udt")) {
-                return vf.createLiteral(row.getString(columnname), CDT.UDT);
+                return vf.createLiteral(row.getUDTValue(columnname).toString(), CDT.UDT);
             }
         }
         if (dataType.isCollection()) {
             if (dataType.getName().toString().equals("set")) {
-                return vf.createLiteral(row.getString(columnname), CDT.SET);
+                return vf.createLiteral(row.getObject(columnname).toString(), CDT.SET);
             }
             if (dataType.getName().toString().equals("list")) {
-                return vf.createLiteral(row.getString(columnname), CDT.LIST);
+                return vf.createLiteral(row.getObject(columnname).toString(), CDT.LIST);
             }
             if (dataType.getName().toString().equals("map")) {
-                return vf.createLiteral(row.getString(columnname), CDT.MAP);
+                return vf.createLiteral(row.getObject(columnname).toString(), CDT.MAP);
             }
         }
         throw new RuntimeException();
