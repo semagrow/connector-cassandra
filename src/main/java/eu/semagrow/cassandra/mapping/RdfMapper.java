@@ -93,7 +93,7 @@ public class RdfMapper {
                 return vf.createLiteral(row.getString(columnname), CDT.MAP);
             }
         }
-        throw new RuntimeException();  /*blob, inet, timestamp, uuid, timeuuid, list, map, set, isNULL */
+        throw new RuntimeException();
     }
 
 
