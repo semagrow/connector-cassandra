@@ -103,6 +103,12 @@ public class CassandraSchema {
         return complexColumns.get(table).contains(column);
     }
 
+    public boolean tableContainsColumn(String table, String column) {
+        return (partitionColumns.get(table).contains(column) ||
+                clusteringColumns.get(table).contains(column) ||
+                regularColumns.get(table).contains(column) );
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void setCredentials(String address, int port, String keyspace) {

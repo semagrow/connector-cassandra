@@ -1,5 +1,6 @@
 package eu.semagrow.cassandra.mapping;
 
+import eu.semagrow.cassandra.connector.CassandraSchema;
 import eu.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openrdf.model.Literal;
@@ -12,6 +13,34 @@ import org.openrdf.model.vocabulary.XMLSchema;
  */
 public class CqlMapper {
 
+    /**
+     * Returns a table name from a URI.
+     * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
+     * */
+    public static String getTableFromURI(String base, URI predicate, CassandraSchema schema) {
+        Pair<String, String> pair = decompose(base, predicate);
+        if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
+            return pair.getLeft();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a column name from a URI.
+     * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
+     * */
+    public static String getColumnFromURI(String base, URI predicate, CassandraSchema schema) {
+        Pair<String, String> pair = decompose(base, predicate);
+        if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
+            return pair.getRight();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a table name from a URI.
+     * Essentially extracts the local name of the URI
+     * */
     public static String getTableFromURI(String base, URI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getLeft();
