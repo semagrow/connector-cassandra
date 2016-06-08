@@ -75,6 +75,9 @@ public class CqlMapper {
                 return v.stringValue();
             }
             else {
+                if (((Literal) v).getDatatype() == null) {
+                    return "\'" + v.stringValue() + "\'";
+                }
                 if (((Literal) v).getDatatype().equals(CDT.UDT)) {
                     return v.stringValue();
                 }
