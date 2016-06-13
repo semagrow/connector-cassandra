@@ -5,13 +5,13 @@ import eu.semagrow.cassandra.connector.CassandraClient;
 import eu.semagrow.cassandra.mapping.RdfMapper;
 import eu.semagrow.commons.vocabulary.SEVOD;
 import eu.semagrow.commons.vocabulary.VOID;
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFWriter;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +26,9 @@ public class CassandraTriplesMetadataWriter implements MetadataWriter {
 
     private CassandraClient client;
     private String base;
-    private URI endpoint;
+    private IRI endpoint;
 
-    private ValueFactory vf = ValueFactoryImpl.getInstance();
+    private ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Override
     public void setClient(CassandraClient client) {
@@ -40,7 +40,7 @@ public class CassandraTriplesMetadataWriter implements MetadataWriter {
     }
 
     public void setEndpoint(String endpoint) {
-        this.endpoint = vf.createURI(endpoint);
+        this.endpoint = vf.createIRI(endpoint);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class CassandraTriplesMetadataWriter implements MetadataWriter {
         long triples = client.executeCount("SELECT COUNT(*) FROM " + tableName + ";");
 
         Resource partition = vf.createBNode();
-        URI property = RdfMapper.getUriFromColumn(base, tableName, columnName);
+        IRI property = RdfMapper.getUriFromColumn(base, tableName, columnName);
         writer.handleStatement(vf.createStatement(root, VOID.PROPERTYPARTITION, partition));
         writer.handleStatement(vf.createStatement(partition, VOID.PROPERTY, property));
         writer.handleStatement(vf.createStatement(partition, VOID.TRIPLES, vf.createLiteral(triples)));
@@ -101,7 +101,7 @@ public class CassandraTriplesMetadataWriter implements MetadataWriter {
         long triples = client.executeCount("SELECT COUNT(" + columnName + ") FROM " + tableName + ";");
 
         Resource partition = vf.createBNode();
-        URI property = RdfMapper.getUriFromColumn(base, tableName, columnName);
+        IRI property = RdfMapper.getUriFromColumn(base, tableName, columnName);
         writer.handleStatement(vf.createStatement(root, VOID.PROPERTYPARTITION, partition));
         writer.handleStatement(vf.createStatement(partition, VOID.PROPERTY, property));
         writer.handleStatement(vf.createStatement(partition, VOID.TRIPLES, vf.createLiteral(triples)));

@@ -5,13 +5,13 @@ import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.utils.Utils;
 import eu.semagrow.core.plan.Plan;
 import eu.semagrow.core.source.SourceCapabilitiesBase;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.query.algebra.*;
-import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
-import org.openrdf.query.algebra.helpers.StatementPatternCollector;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.query.algebra.*;
+import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
+import org.eclipse.rdf4j.query.algebra.helpers.StatementPatternCollector;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
     private CassandraSchema cassandraSchema;
     private String base;
-    ValueFactory vf = ValueFactoryImpl.getInstance();
+    ValueFactory vf = SimpleValueFactory.getInstance();
 
     public CassandraCapabilities(CassandraSchema cassandraSchema, String base) {
         this.cassandraSchema = cassandraSchema;
@@ -48,7 +48,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
         final Set<Var> subjects = new HashSet<>();
         final Set<Var> predicates = new HashSet<>();
 
-        p1.visit(new QueryModelVisitorBase<RuntimeException>() {
+        p1.visit(new AbstractQueryModelVisitor<RuntimeException>() {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
@@ -56,7 +56,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
             }
         });
 
-        p2.visit(new QueryModelVisitorBase<RuntimeException>() {
+        p2.visit(new AbstractQueryModelVisitor<RuntimeException>() {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
@@ -72,7 +72,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
         return (predicates.stream()
                 .noneMatch(p -> p.getValue() == null) &&
                 predicates.stream()
-                        .map(p -> CqlMapper.getTableFromURI(base, (URI) p.getValue()))
+                        .map(p -> CqlMapper.getTableFromURI(base, (IRI) p.getValue()))
                         .distinct().count() == 1);
     }
 
@@ -157,11 +157,11 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
         /* for all non restrictable columns create a filter condition */
 
-        plan.visit(new QueryModelVisitorBase<RuntimeException>() {
+        plan.visit(new AbstractQueryModelVisitor<RuntimeException>() {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
 
-                String column = CqlMapper.getColumnFromURI(base, (URI) node.getPredicateVar().getValue());
+                String column = CqlMapper.getColumnFromURI(base, (IRI) node.getPredicateVar().getValue());
                 Value value = node.getObjectVar().getValue();
 
                 if (nonRestrictableColumns.contains(column) && value != null) {
@@ -193,9 +193,9 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
     private String getRelevantTable(List<StatementPattern> statementPatterns) {
         return statementPatterns.stream()
-                .map(pattern -> ((URI) pattern.getPredicateVar().getValue()))
-                .filter(uri -> CqlMapper.getTableFromURI(base, (URI) uri) != null)
-                .map(uri -> CqlMapper.getTableFromURI(base, (URI) uri))
+                .map(pattern -> ((IRI) pattern.getPredicateVar().getValue()))
+                .filter(uri -> CqlMapper.getTableFromURI(base, (IRI) uri) != null)
+                .map(uri -> CqlMapper.getTableFromURI(base, (IRI) uri))
                 .distinct()
                 .collect(Utils.singletonCollector());
     }
@@ -203,9 +203,9 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
     private Set<String> getRestrictedColumns(List<StatementPattern> statementPatterns, Set<String> boundVars) {
          return statementPatterns.stream()
                  .filter(pattern -> isBound(pattern, boundVars))
-                 .map(pattern -> ((URI) pattern.getPredicateVar().getValue()))
-                 .filter(uri -> CqlMapper.getColumnFromURI(base, (URI) uri) != null)
-                 .map(uri -> CqlMapper.getColumnFromURI(base, (URI) uri))
+                 .map(pattern -> ((IRI) pattern.getPredicateVar().getValue()))
+                 .filter(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri) != null)
+                 .map(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri))
                  .collect(Collectors.toSet());
     }
 

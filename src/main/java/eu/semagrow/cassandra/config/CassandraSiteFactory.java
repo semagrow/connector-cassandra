@@ -4,7 +4,7 @@ import eu.semagrow.cassandra.CassandraSite;
 import eu.semagrow.core.source.Site;
 import eu.semagrow.core.source.SiteConfig;
 import eu.semagrow.core.source.SiteFactory;
-import org.openrdf.model.URI;
+import org.eclipse.rdf4j.model.IRI;
 
 /**
  * Created by angel on 5/4/2016.
@@ -33,7 +33,7 @@ public class CassandraSiteFactory implements SiteFactory {
     }
 
     @Override
-    public Site getSite(URI endpoint) {
+    public Site getSite(IRI endpoint) {
         return new CassandraSite(endpoint);
     }
 }

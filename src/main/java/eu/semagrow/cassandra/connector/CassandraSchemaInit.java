@@ -3,15 +3,16 @@ package eu.semagrow.cassandra.connector;
 import eu.semagrow.cassandra.vocab.CDV;
 import eu.semagrow.commons.utils.FileUtils;
 import eu.semagrow.commons.vocabulary.VOID;
-import org.openrdf.model.URI;
-import org.openrdf.query.*;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.sail.SailRepository;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFParseException;
-import org.openrdf.sail.memory.MemoryStore;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.query.*;
+import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.RDFParserRegistry;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class CassandraSchemaInit {
         return instance;
     }
 
-    public CassandraSchema getCassandraSchema(URI endpoint) {
+    public CassandraSchema getCassandraSchema(IRI endpoint) {
         return schemaMap.get(endpoint.stringValue());
     }
 
@@ -60,7 +61,7 @@ public class CassandraSchemaInit {
             Repository repo = new SailRepository(new MemoryStore());
             repo.initialize();
 
-            RDFFormat fileFormat = RDFFormat.forFileName(file.getAbsolutePath(), RDFFormat.N3);
+            RDFFormat fileFormat = RDFFormat.matchFileName(file.getAbsolutePath(), RDFParserRegistry.getInstance().getKeys()).orElse(RDFFormat.N3);
 
             RepositoryConnection conn = repo.getConnection();
             conn.add(file, file.toURI().toString(), fileFormat);
@@ -189,7 +190,7 @@ public class CassandraSchemaInit {
                 BindingSet bs = results.next();
                 CassandraSchema cs = schemaMap.get(bs.getValue("endpoint").stringValue());
 
-                URI type = (URI) bs.getValue("type");
+                IRI type = (IRI) bs.getValue("type");
                 String column = bs.getValue("columnname").stringValue();
                 String table = bs.getValue("tablename").stringValue();
 

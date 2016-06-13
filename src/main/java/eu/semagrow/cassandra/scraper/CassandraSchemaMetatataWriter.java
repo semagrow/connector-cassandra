@@ -7,16 +7,17 @@ import eu.semagrow.cassandra.connector.CassandraClient;
 import eu.semagrow.cassandra.mapping.RdfMapper;
 import eu.semagrow.cassandra.vocab.CDV;
 import eu.semagrow.commons.vocabulary.VOID;
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.n3.N3Writer;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.n3.N3Writer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.io.PrintStream;
 
@@ -29,9 +30,9 @@ public class CassandraSchemaMetatataWriter implements MetadataWriter {
 
     private CassandraClient client;
     private String base;
-    private URI endpoint;
+    private IRI endpoint;
 
-    private ValueFactory vf = ValueFactoryImpl.getInstance();
+    private ValueFactory vf = SimpleValueFactory.getInstance();
 
     @Override
     public void setClient(CassandraClient client) {
@@ -43,7 +44,7 @@ public class CassandraSchemaMetatataWriter implements MetadataWriter {
     }
 
     public void setEndpoint(String endpoint) {
-        this.endpoint = vf.createURI(endpoint);
+        this.endpoint = vf.createIRI(endpoint);
     }
 
     @Override

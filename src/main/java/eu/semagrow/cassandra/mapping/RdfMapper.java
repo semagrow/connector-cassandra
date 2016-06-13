@@ -2,52 +2,52 @@ package eu.semagrow.cassandra.mapping;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 /**
  * Created by antonis on 8/4/2016.
  */
 public class RdfMapper {
 
-    private static final ValueFactory vf = ValueFactoryImpl.getInstance();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    public static URI getUriFromTable(String base, String table) {
+    public static IRI getUriFromTable(String base, String table) {
         String uriString = base + "/" + table;
-        return vf.createURI(uriString);
+        return vf.createIRI(uriString);
     }
 
-    public static URI getUriFromColumn(String base, String table, String column) {
+    public static IRI getUriFromColumn(String base, String table, String column) {
         String uriString = base + "/" + table + "#" + column;
-        return vf.createURI(uriString);
+        return vf.createIRI(uriString);
     }
 
-    public static URI getXsdFromColumnDatatype(DataType dataType) {
+    public static IRI getXsdFromColumnDatatype(DataType dataType) {
         if (dataType.equals(DataType.ascii()) || dataType.equals(DataType.varchar()) || dataType.equals(DataType.text())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#string");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#string");
         }
         if (dataType.equals(DataType.varint())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#integer");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#integer");
         }
         if (dataType.equals(DataType.decimal())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#decimal");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#decimal");
         }
         if (dataType.equals(DataType.cint())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#int");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#int");
         }
         if (dataType.equals(DataType.bigint()) || dataType.equals(DataType.counter()) ) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#long");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#long");
         }
         if (dataType.equals(DataType.cdouble())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#double");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#double");
         }
         if (dataType.equals(DataType.cfloat())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#float");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#float");
         }
         if (dataType.equals(DataType.cboolean())) {
-            return vf.createURI("http://www.w3.org/2001/XMLSchema#boolean");
+            return vf.createIRI("http://www.w3.org/2001/XMLSchema#boolean");
         }
         throw new RuntimeException();  /*blob, inet, timestamp, uuid, timeuuid, list, map, set*/
     }
@@ -62,7 +62,7 @@ public class RdfMapper {
         if (dataType.equals(DataType.ascii()) || dataType.equals(DataType.varchar()) || dataType.equals(DataType.text())) {
             String result = row.getString(columnname);
             if (result.startsWith("<") && result.endsWith(">")) {
-                return vf.createURI(result.substring(1,result.length()-1));
+                return vf.createIRI(result.substring(1,result.length()-1));
             }
             else {
                 return vf.createLiteral(result);

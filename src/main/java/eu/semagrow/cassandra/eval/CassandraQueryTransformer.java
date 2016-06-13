@@ -6,13 +6,13 @@ import com.datastax.driver.core.Row;
 import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.algebra.*;
-import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
-import org.openrdf.query.algebra.helpers.StatementPatternCollector;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.algebra.*;
+import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
+import org.eclipse.rdf4j.query.algebra.helpers.StatementPatternCollector;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,7 +53,7 @@ public class CassandraQueryTransformer {
         /* get cassandra relevant table: all pattern data must be in the same table */
 
         String table = statementPatterns.stream()
-                .map(pattern -> (URI) pattern.getPredicateVar().getValue())
+                .map(pattern -> (IRI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getTableFromURI(base, uri))
                 .distinct()
                 .collect(Utils.singletonCollector());
@@ -61,7 +61,7 @@ public class CassandraQueryTransformer {
         /* get cassandra columns needed for CQL query renderer */
 
         Set<String> columns = statementPatterns.stream()
-                .map(pattern -> (URI) pattern.getPredicateVar().getValue())
+                .map(pattern -> (IRI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getColumnFromURI(base, uri))
                 .collect(Collectors.toSet());
 
@@ -70,16 +70,16 @@ public class CassandraQueryTransformer {
         var2column = statementPatterns.stream()
                 .filter(pattern -> pattern.getObjectVar().getValue() == null)
                 .collect(Collectors.toMap(p -> p.getObjectVar().getName(),
-                                          p -> CqlMapper.getColumnFromURI(base, (URI) p.getPredicateVar().getValue())));
+                                          p -> CqlMapper.getColumnFromURI(base, (IRI) p.getPredicateVar().getValue())));
 
         /* get cassandra where restrictions */
 
 
         Stream<Restriction> patternRestrictions = statementPatterns.stream()
                 .filter(p -> p.getObjectVar().getValue() != null)
-                .filter(p -> (!((URI) p.getPredicateVar().getValue()).equals(RDF.TYPE)))
+                .filter(p -> (!((IRI) p.getPredicateVar().getValue()).equals(RDF.TYPE)))
                 .map(p -> new Restriction(
-                        CqlMapper.getColumnFromURI(base, (URI) p.getPredicateVar().getValue()),
+                        CqlMapper.getColumnFromURI(base, (IRI) p.getPredicateVar().getValue()),
                         Compare.CompareOp.EQ,
                         CqlMapper.getCqlValueFromValue(base, p.getObjectVar().getValue())));
 
@@ -139,7 +139,7 @@ public class CassandraQueryTransformer {
      */
     public BindingSet getBindingSet(Row row)
     {
-        return new CassandraBindingSet(subject, row, var2column, ValueFactoryImpl.getInstance());
+        return new CassandraBindingSet(subject, row, var2column, SimpleValueFactory.getInstance());
 
         /*
         QueryBindingSet bindings = new QueryBindingSet();
@@ -200,7 +200,7 @@ public class CassandraQueryTransformer {
         public String toString() { return getRestrictionString(); }
     }
 
-    private class FilterRestrictionCollector extends QueryModelVisitorBase<RuntimeException> {
+    private class FilterRestrictionCollector extends AbstractQueryModelVisitor<RuntimeException> {
 
         final private String base;
         private Map<String, String> var2column;

@@ -1,9 +1,9 @@
 package eu.semagrow.cassandra.utils;
 
 import eu.semagrow.core.eval.BindingSetOps;
-import org.openrdf.query.Binding;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.algebra.evaluation.QueryBindingSet;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet;
 
 import java.util.Collection;
 

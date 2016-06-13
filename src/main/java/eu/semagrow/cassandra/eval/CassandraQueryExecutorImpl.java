@@ -6,11 +6,11 @@ import eu.semagrow.cassandra.utils.BindingSetOpsImpl;
 import eu.semagrow.core.eval.QueryExecutor;
 import eu.semagrow.core.eval.BindingSetOps;
 import eu.semagrow.core.source.Site;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.algebra.TupleExpr;
-import org.openrdf.query.algebra.Var;
-import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.algebra.TupleExpr;
+import org.eclipse.rdf4j.query.algebra.Var;
+import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +160,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
 
     private Set<String> computeVars(TupleExpr serviceExpression) {
         final Set<String> res = new HashSet<String>();
-        serviceExpression.visit(new QueryModelVisitorBase<RuntimeException>() {
+        serviceExpression.visit(new AbstractQueryModelVisitor<RuntimeException>() {
 
             @Override
             public void meet(Var node)

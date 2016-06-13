@@ -1,17 +1,17 @@
 package eu.semagrow.cassandra.mapping;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.openrdf.model.Literal;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 /**
  * Created by antonis on 8/4/2016.
  */
 public class CqlMapper {
 
-    public static String getTableFromURI(String base, URI predicate) {
+    public static String getTableFromURI(String base, IRI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getLeft();
     }
@@ -20,7 +20,7 @@ public class CqlMapper {
      * Returns a column name from a URI.
      * Essentially extracts the local name of the URI
      * */
-    public static String getColumnFromURI(String base, URI predicate) {
+    public static String getColumnFromURI(String base, IRI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getRight();
     }
@@ -32,7 +32,7 @@ public class CqlMapper {
      * @return
      */
     public static String getCqlValueFromValue(String base, Value v) {
-        if (v instanceof URI) {
+        if (v instanceof IRI) {
             if (v.stringValue().startsWith(base)) {
                 return v.stringValue().substring(base.length());
             }
@@ -57,7 +57,7 @@ public class CqlMapper {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Pair<String, String> decompose(String base, URI predicate) {
+    private static Pair<String, String> decompose(String base, IRI predicate) {
         String value = predicate.stringValue();
         int columnStart = value.lastIndexOf("#") + 1;
         int predicateStart = value.lastIndexOf("/") + 1;
@@ -85,7 +85,7 @@ public class CqlMapper {
 
     private static boolean isNumeric(Literal l) {
 
-        URI dataType =l.getDatatype();
+        IRI dataType =l.getDatatype();
 
         return  dataType != null && (dataType.equals(XMLSchema.INTEGER)
                 || dataType.equals(XMLSchema.INT)

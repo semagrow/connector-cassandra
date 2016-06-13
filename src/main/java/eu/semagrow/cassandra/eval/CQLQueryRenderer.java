@@ -1,8 +1,8 @@
 package eu.semagrow.cassandra.eval;
 
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.parser.ParsedQuery;
-import org.openrdf.queryrender.QueryRenderer;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.parser.ParsedQuery;
+import org.eclipse.rdf4j.queryrender.QueryRenderer;
 
 import java.util.Collections;
 

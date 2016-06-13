@@ -1,7 +1,7 @@
 package eu.semagrow.cassandra.scraper;
 
 import eu.semagrow.cassandra.connector.CassandraClient;
-import org.openrdf.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
 
 import java.io.PrintStream;
 

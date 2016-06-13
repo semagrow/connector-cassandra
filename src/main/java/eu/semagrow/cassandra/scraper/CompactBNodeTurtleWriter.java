@@ -21,14 +21,14 @@ package eu.semagrow.cassandra.scraper;
  * under the Aduna BSD-style license.
  */
 
-import org.openrdf.model.*;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.OWL;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.turtle.TurtleWriter;
+import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.rio.RDFHandlerException;
+import org.eclipse.rdf4j.rio.RDFWriter;
+import org.eclipse.rdf4j.rio.turtle.TurtleWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -59,7 +59,7 @@ public class CompactBNodeTurtleWriter extends TurtleWriter {
 
     protected BNode pendingBNode;
     protected Deque<Resource> storedSubjects = new ArrayDeque<Resource>();
-    protected Deque<URI> storedPredicates = new ArrayDeque<URI>();
+    protected Deque<IRI> storedPredicates = new ArrayDeque<IRI>();
     protected Deque<Value> storedBNodes = new ArrayDeque<Value>();
     protected Set<BNode> seenBNodes = new HashSet<BNode>();
 
@@ -163,7 +163,7 @@ public class CompactBNodeTurtleWriter extends TurtleWriter {
         }
 
         Resource subj = st.getSubject();
-        URI pred = st.getPredicate();
+        IRI pred = st.getPredicate();
         Value obj = st.getObject();
 
         try {
@@ -272,7 +272,7 @@ public class CompactBNodeTurtleWriter extends TurtleWriter {
 
     public static void main(String[] args) {
 
-        ValueFactory vf = ValueFactoryImpl.getInstance();
+        ValueFactory vf = SimpleValueFactory.getInstance();
         Writer writer = new StringWriter();
         RDFWriter rdf = new CompactBNodeTurtleWriter(writer);
 
@@ -293,14 +293,14 @@ public class CompactBNodeTurtleWriter extends TurtleWriter {
             BNode sameThing = vf.createBNode();
             BNode otherThing = vf.createBNode();
             rdf.handleStatement(vf.createStatement(thing, RDFS.LABEL, vf.createLiteral("1")));
-            rdf.handleStatement(vf.createStatement(thing, RDF.TYPE, vf.createURI("http://test.org/Thing")));
+            rdf.handleStatement(vf.createStatement(thing, RDF.TYPE, vf.createIRI("http://test.org/Thing")));
             rdf.handleStatement(vf.createStatement(thing, OWL.SAMEAS, sameThing));
             rdf.handleStatement(vf.createStatement(sameThing, RDFS.LABEL, vf.createLiteral(1l)));
-            rdf.handleStatement(vf.createStatement(sameThing, RDF.TYPE, vf.createURI("http://test.org/Thing")));
+            rdf.handleStatement(vf.createStatement(sameThing, RDF.TYPE, vf.createIRI("http://test.org/Thing")));
             rdf.handleStatement(vf.createStatement(sameThing, OWL.SAMEAS, thing));
             rdf.handleStatement(vf.createStatement(sameThing, OWL.SAMEAS, otherThing));
             rdf.handleStatement(vf.createStatement(otherThing, RDFS.LABEL, vf.createLiteral(1d)));
-            rdf.handleStatement(vf.createStatement(otherThing, RDF.TYPE, vf.createURI("http://test.org/Thing")));
+            rdf.handleStatement(vf.createStatement(otherThing, RDF.TYPE, vf.createIRI("http://test.org/Thing")));
 
             rdf.endRDF();
         } catch (RDFHandlerException e) {
