@@ -133,18 +133,13 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
             cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
         }
 
-        CassandraClient client = new CassandraClient();
-
-        client.setCredentials(site.getAddress(), site.getPort(), site.getKeyspace());
-        client.connect();
+        CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
 
         logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
 
         Stream<BindingSet> result = Streams.from(client.execute(cqlQuery))
                 .filter(transformer::containsAllFields)
                 .map(transformer::getBindingSet);
-
-        client.close();
 
         return result;
     }
