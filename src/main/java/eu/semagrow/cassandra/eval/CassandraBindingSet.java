@@ -93,10 +93,7 @@ public class CassandraBindingSet implements BindingSet {
 
     @Override
     public Value getValue(String s) {
-        if (hasBinding(s)) {
-            return getBinding(s).getValue();
-        }
-        else return null;
+        return getBinding(s).getValue();
     }
 
     @Override
