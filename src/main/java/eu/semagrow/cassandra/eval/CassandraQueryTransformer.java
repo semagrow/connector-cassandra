@@ -1,8 +1,8 @@
 package eu.semagrow.cassandra.eval;
 
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.Row;
+import eu.semagrow.cassandra.connector.CassandraSchema;
+import eu.semagrow.cassandra.connector.CassandraSchemaInit;
 import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,12 +24,16 @@ import java.util.stream.StreamSupport;
  */
 public class CassandraQueryTransformer {
 
-    private String subject = null;
+    private Var subject = null;
+    private String table;
+    private String base;
 
     private Map<String, String> var2column;
+    private URI endpoint;
+    private CassandraSchema cassandraSchema;
 
-    public String transformQuery(String base, TupleExpr expr) {
-        return transformQuery(base, expr, Collections.emptyList());
+    public String transformQuery(String base, URI endpoint, TupleExpr expr) {
+        return transformQuery(base, endpoint, expr, Collections.emptyList());
     }
 
     /**
@@ -39,20 +43,24 @@ public class CassandraQueryTransformer {
      * @param bindingSetList
      * @return
      */
-    public String transformQuery(String base, TupleExpr expr, List<BindingSet> bindingSetList) {
+    public String transformQuery(String base, URI endpoint, TupleExpr expr, List<BindingSet> bindingSetList) {
+
+        this.endpoint = endpoint;
+        this.base = base;
+        this.cassandraSchema = CassandraSchemaInit.getInstance().getCassandraSchema(endpoint);
 
         List<StatementPattern> statementPatterns = StatementPatternCollector.process(expr);
 
         /* get subject of all patterns: all patterns must have tha same subject */
 
         subject = statementPatterns.stream()
-                .map(p -> p.getSubjectVar().getName())
+                .map(p -> p.getSubjectVar())
                 .distinct()
                 .collect(Utils.singletonCollector());
 
         /* get cassandra relevant table: all pattern data must be in the same table */
 
-        String table = statementPatterns.stream()
+        table = statementPatterns.stream()
                 .map(pattern -> (URI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getTableFromURI(base, uri))
                 .distinct()
@@ -64,6 +72,8 @@ public class CassandraQueryTransformer {
                 .map(pattern -> (URI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getColumnFromURI(base, uri))
                 .collect(Collectors.toSet());
+        columns.addAll(cassandraSchema.getPublicKey(table));
+
 
         /* get sparql variables => cassandra columns map: Map<sparqlVariable,CassandraTable>*/
 
@@ -74,6 +84,7 @@ public class CassandraQueryTransformer {
 
         /* get cassandra where restrictions */
 
+        /* 1) restrictions from triple pattern objects */
 
         Stream<Restriction> patternRestrictions = statementPatterns.stream()
                 .filter(p -> p.getObjectVar().getValue() != null)
@@ -82,6 +93,8 @@ public class CassandraQueryTransformer {
                         CqlMapper.getColumnFromURI(base, (URI) p.getPredicateVar().getValue()),
                         Compare.CompareOp.EQ,
                         CqlMapper.getCqlValueFromValue(base, p.getObjectVar().getValue())));
+
+        /* 2) restrictions from bindingSet */
 
         Map<String, Set<String>> bindings = bindingSetList.stream()
                 .flatMap(bindingSet -> StreamSupport.stream(bindingSet.spliterator(), false))
@@ -96,7 +109,26 @@ public class CassandraQueryTransformer {
                         .filter( e -> var2column.containsKey(e.getKey()) )
                         .map( e -> new Restriction(var2column.get(e.getKey()), e.getValue()));
 
+
+        /* 3) restrictions from triple pattern subjects and subject bindings */
+
+        Set<Restriction> subjectRestrictions = new HashSet<>();
+        Set<URI> uriSet = new HashSet<>();
+
+        if (subject.hasValue()) {
+            uriSet.add((URI) subject.getValue());
+        }
+        if (bindings.keySet().contains(subject.getName())) {
+            for (BindingSet bs: bindingSetList) {
+                uriSet.add((URI) bs.getBinding(subject.getName()).getValue());
+            }
+        }
+        addSubjectRestrictions(subjectRestrictions, base, table, uriSet);
+
+        /* concat all restrictions */
+
         Set<Restriction> restrictions = Stream.concat(patternRestrictions, bindingsRestrictions).collect(Collectors.toSet());
+        restrictions.addAll(subjectRestrictions);
 
         /* visit filters */
 
@@ -139,7 +171,7 @@ public class CassandraQueryTransformer {
      */
     public BindingSet getBindingSet(Row row)
     {
-        return new CassandraBindingSet(subject, row, var2column, ValueFactoryImpl.getInstance());
+        return new CassandraBindingSet(subject.getName(), base, table, cassandraSchema, row, var2column, ValueFactoryImpl.getInstance());
 
         /*
         QueryBindingSet bindings = new QueryBindingSet();
@@ -167,6 +199,27 @@ public class CassandraQueryTransformer {
             }
         }
         return true;
+    }
+
+    private void addSubjectRestrictions(Set<Restriction> subjectRestrictions, String base, String table, Set<URI> subjectBindings) {
+        Map<String, Set<String>> columnRestrictions = new HashMap<>();
+        for (URI uri: subjectBindings) {
+            String restrictionsString = CqlMapper.getRestrictionsFromSubjectURI(base, table, uri);
+            for (String restrictionString : StringUtils.split(restrictionsString,";")) {
+                String restriction[] = StringUtils.split(restrictionString, "=");
+                String name = restriction[0];
+                String value = restriction[1];
+                Set<String> set = columnRestrictions.get(name);
+                if (set == null) {
+                    columnRestrictions.put(name, new HashSet<>());
+                    set = columnRestrictions.get(name);
+                }
+                set.add(value);
+            }
+        }
+        for (String name: columnRestrictions.keySet()) {
+            subjectRestrictions.add(new Restriction(name, columnRestrictions.get(name)));
+        }
     }
 
     private class Restriction {

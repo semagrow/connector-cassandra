@@ -8,6 +8,9 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 /**
  * Created by antonis on 8/4/2016.
  */
@@ -54,6 +57,22 @@ public class CqlMapper {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getRight();
     }
+
+    /**
+     * Returns a cql substring that contains all relevant column restrictions
+     */
+    public static String getRestrictionsFromSubjectURI(String base, String table, URI subject) {
+        Pair<String, String> pair = decompose(base, subject);
+        if (pair.getLeft().equals(table)) {
+            try {
+                return URLDecoder.decode(pair.getRight(),"UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        throw new IllegalArgumentException();
+    }
+
 
     /***
      * Translates a Value to a CQLValue string representation

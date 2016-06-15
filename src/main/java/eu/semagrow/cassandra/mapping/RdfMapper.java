@@ -3,10 +3,16 @@ package eu.semagrow.cassandra.mapping;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
 import eu.semagrow.cassandra.vocab.CDT;
+import org.apache.commons.lang3.StringUtils;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by antonis on 8/4/2016.
@@ -22,6 +28,20 @@ public class RdfMapper {
 
     public static URI getUriFromColumn(String base, String table, String column) {
         String uriString = base + "/" + table + "#" + column;
+        return vf.createURI(uriString);
+    }
+
+    public static URI getSubjectURIFromRow(String base, String table, Row row, Set<String> publicKey) {
+        Set<String> substrings = new HashSet<>();
+        for (String column : publicKey) {
+            substrings.add(column + "=" + getStringFromCassandraResult(row, column));
+        }
+        String uriString = null;
+        try {
+            uriString = base + "/" + table + "#" + URLEncoder.encode(StringUtils.join(substrings,";"), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         return vf.createURI(uriString);
     }
 
@@ -95,6 +115,42 @@ public class RdfMapper {
         }
         throw new RuntimeException();
     }
+
+
+    private static String getStringFromCassandraResult(Row row, String columnname) {
+        DataType dataType = row.getColumnDefinitions().getType(columnname);
+
+        if (row.getObject(columnname) == null) {
+            return "";
+        }
+
+        if (dataType.equals(DataType.ascii()) || dataType.equals(DataType.varchar()) || dataType.equals(DataType.text()) || dataType.equals(DataType.inet())) {
+            return "'" + row.getString(columnname) + "'";
+        }
+        if (dataType.equals(DataType.varint())) {
+            return "" + row.getVarint(columnname).intValueExact();
+        }
+        if (dataType.equals(DataType.decimal())) {
+            return "" + row.getDecimal(columnname).doubleValue();
+        }
+        if (dataType.equals(DataType.cint())) {
+            return "" + row.getInt(columnname);
+        }
+        if (dataType.equals(DataType.bigint()) || dataType.equals(DataType.counter()) ) {
+            return "" + row.getLong(columnname);
+        }
+        if (dataType.equals(DataType.cdouble())) {
+            return "" + row.getDouble(columnname);
+        }
+        if (dataType.equals(DataType.cfloat())) {
+            return "" + row.getFloat(columnname);
+        }
+        if (dataType.equals(DataType.cboolean())) {
+            return "" + row.getBool(columnname);
+        }
+        else return "'" + row.getObject(columnname).toString() + "'";
+    }
+
 
 
 }

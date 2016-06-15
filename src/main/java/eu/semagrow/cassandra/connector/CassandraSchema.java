@@ -18,6 +18,7 @@ public class CassandraSchema {
     private Set<String> tables = new HashSet<>();
     private Map<String, Set<String>> partitionColumns = new HashMap<>();
     private Map<String, List<String>> clusteringColumns = new HashMap<>();
+    private Map<String, Set<String>> publicKeyColumns = new HashMap<>();
     private Map<String, Set<String>> regularColumns = new HashMap<>();
     private Map<String, Set<String>> indexedColumns = new HashMap<>();
     private Map<String, Set<String>> complexColumns = new HashMap<>();
@@ -30,6 +31,7 @@ public class CassandraSchema {
         this.tables.add(table);
         this.partitionColumns.put(table, new HashSet<>());
         this.clusteringColumns.put(table, new ArrayList<>());
+        this.publicKeyColumns.put(table, new HashSet<>());
         this.regularColumns.put(table, new HashSet<>());
         this.indexedColumns.put(table, new HashSet<>());
         this.complexColumns.put(table, new HashSet<>());
@@ -37,6 +39,7 @@ public class CassandraSchema {
 
     public void addPartitionColumn(String table, String column) {
         this.partitionColumns.get(table).add(column);
+        this.publicKeyColumns.get(table).add(column);
     }
 
     public void addRegularColumn(String table, String column) {
@@ -51,6 +54,7 @@ public class CassandraSchema {
             }
         }
         this.clusteringColumns.get(table).set(position, column);
+        this.publicKeyColumns.get(table).add(column);
     }
 
     public void addIndex(String table, String column) {
@@ -89,6 +93,10 @@ public class CassandraSchema {
 
     public List<String> getClusteringColumns(String table) {
         return clusteringColumns.get(table);
+    }
+
+    public Set<String> getPublicKey(String table) {
+        return publicKeyColumns.get(table);
     }
 
     public Set<String> getRegularColumns(String table) {

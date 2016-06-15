@@ -127,10 +127,10 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         String cqlQuery;
 
         if (bindingsList.isEmpty()) {
-            cqlQuery = transformer.transformQuery(site.getBase(), expr);
+            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
         }
         else {
-            cqlQuery = transformer.transformQuery(site.getBase(), expr, bindingsList);
+            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
         }
 
         CassandraClient client = new CassandraClient();

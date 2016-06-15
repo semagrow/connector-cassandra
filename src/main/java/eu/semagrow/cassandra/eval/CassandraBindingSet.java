@@ -1,8 +1,10 @@
 package eu.semagrow.cassandra.eval;
 
 import com.datastax.driver.core.Row;
+import eu.semagrow.cassandra.connector.CassandraSchema;
 import eu.semagrow.cassandra.mapping.RdfMapper;
 import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.query.Binding;
@@ -23,15 +25,21 @@ public class CassandraBindingSet implements BindingSet {
     private Row internalRep;
     private Map<String, String> var2column;
     private String subjectVar;
+    private CassandraSchema cassandraSchema;
+    private String base;
+    private String table;
 
     private Resource subjectResource;
 
-    public CassandraBindingSet(String subjectVar, Row row, Map<String, String> var2column, ValueFactory vf) {
+    public CassandraBindingSet(String subjectVar, String base, String table, CassandraSchema cassandraSchema, Row row, Map<String, String> var2column, ValueFactory vf) {
         internalRep = row;
 
         this.var2column = var2column;
         this.subjectVar = subjectVar;
         this.subjectResource = vf.createBNode(row.getColumnDefinitions().getTable(0));
+        this.cassandraSchema = cassandraSchema;
+        this.base = base;
+        this.table = table;
     }
 
     @Override
@@ -52,8 +60,11 @@ public class CassandraBindingSet implements BindingSet {
     @Override
     public Binding getBinding(String v) {
 
-        if (v.equals(subjectVar))
-            return new BindingImpl(subjectVar, subjectResource);
+        if (v.equals(subjectVar)) {
+            //return new BindingImpl(subjectVar, subjectResource);
+            URI uri = RdfMapper.getSubjectURIFromRow(base, table, internalRep, cassandraSchema.getPublicKey(table));
+            return new BindingImpl(subjectVar, uri);
+        }
         else {
             String c = var2column.get(v);
             if (c != null) {
@@ -82,7 +93,10 @@ public class CassandraBindingSet implements BindingSet {
 
     @Override
     public Value getValue(String s) {
-        return getBinding(s).getValue();
+        if (hasBinding(s)) {
+            return getBinding(s).getValue();
+        }
+        else return null;
     }
 
     @Override

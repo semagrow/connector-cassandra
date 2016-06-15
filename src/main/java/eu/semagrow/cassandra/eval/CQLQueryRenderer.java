@@ -19,6 +19,6 @@ public class CQLQueryRenderer implements QueryRenderer {
 
     public String render(ParsedQuery parsedQuery) throws Exception {
         CassandraQueryTransformer transformer = new CassandraQueryTransformer();
-        return transformer.transformQuery(null, parsedQuery.getTupleExpr(), Collections.emptyList());
+        return transformer.transformQuery(null, null, parsedQuery.getTupleExpr(), Collections.emptyList());
     }
 }
