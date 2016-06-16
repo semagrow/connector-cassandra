@@ -62,7 +62,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
             return evaluateCassandraImpl(site, expr);
         }
 
-        return sendCqlQuery(site, expr, Collections.singletonList(bindings));
+        return evaluateCassandraImpl(site, expr, Collections.singletonList(bindings));
     }
 
     private Stream<BindingSet> evaluateCassandraImpl(CassandraSite site, final TupleExpr expr, List<BindingSet> bindings)
