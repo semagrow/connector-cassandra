@@ -15,7 +15,7 @@ public final class CDV {
 
     public static final IRI ADDRESS;
     public static final IRI PORT;
-    public static final IRI KEYNOTE;
+    public static final IRI KEYSPACE;
 
     public static final IRI BASE;
 
@@ -42,7 +42,7 @@ public final class CDV {
 
         ADDRESS = vf.createIRI(NAMESPACE, "address");
         PORT = vf.createIRI(NAMESPACE, "port");
-        KEYNOTE = vf.createIRI(NAMESPACE, "keynote");
+        KEYSPACE = vf.createIRI(NAMESPACE, "keyspace");
 
         BASE = vf.createIRI(NAMESPACE, "base");
 

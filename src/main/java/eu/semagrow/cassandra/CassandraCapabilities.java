@@ -72,7 +72,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
         return (predicates.stream()
                 .noneMatch(p -> p.getValue() == null) &&
                 predicates.stream()
-                        .map(p -> CqlMapper.getTableFromURI(base, (IRI) p.getValue()))
+                        .map(p -> CqlMapper.getTableFromURI(base, (IRI) p.getValue(), cassandraSchema))
                         .distinct().count() == 1);
     }
 
@@ -161,7 +161,7 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
 
-                String column = CqlMapper.getColumnFromURI(base, (IRI) node.getPredicateVar().getValue());
+                String column = CqlMapper.getColumnFromURI(base, (IRI) node.getPredicateVar().getValue(), cassandraSchema);
                 Value value = node.getObjectVar().getValue();
 
                 if (nonRestrictableColumns.contains(column) && value != null) {
@@ -194,8 +194,8 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
     private String getRelevantTable(List<StatementPattern> statementPatterns) {
         return statementPatterns.stream()
                 .map(pattern -> ((IRI) pattern.getPredicateVar().getValue()))
-                .filter(uri -> CqlMapper.getTableFromURI(base, (IRI) uri) != null)
-                .map(uri -> CqlMapper.getTableFromURI(base, (IRI) uri))
+                .filter(uri -> CqlMapper.getTableFromURI(base, (IRI) uri, cassandraSchema) != null)
+                .map(uri -> CqlMapper.getTableFromURI(base, (IRI) uri, cassandraSchema))
                 .distinct()
                 .collect(Utils.singletonCollector());
     }
@@ -204,8 +204,8 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
          return statementPatterns.stream()
                  .filter(pattern -> isBound(pattern, boundVars))
                  .map(pattern -> ((IRI) pattern.getPredicateVar().getValue()))
-                 .filter(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri) != null)
-                 .map(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri))
+                 .filter(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri, cassandraSchema) != null)
+                 .map(uri -> CqlMapper.getColumnFromURI(base, (IRI) uri, cassandraSchema))
                  .collect(Collectors.toSet());
     }
 

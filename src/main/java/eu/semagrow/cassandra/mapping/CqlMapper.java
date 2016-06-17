@@ -1,16 +1,49 @@
 package eu.semagrow.cassandra.mapping;
 
+import eu.semagrow.cassandra.connector.CassandraSchema;
+import eu.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 /**
  * Created by antonis on 8/4/2016.
  */
 public class CqlMapper {
 
+    /**
+     * Returns a table name from a URI.
+     * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
+     * */
+    public static String getTableFromURI(String base, IRI predicate, CassandraSchema schema) {
+        Pair<String, String> pair = decompose(base, predicate);
+        if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
+            return pair.getLeft();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a column name from a URI.
+     * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
+     * */
+    public static String getColumnFromURI(String base, IRI predicate, CassandraSchema schema) {
+        Pair<String, String> pair = decompose(base, predicate);
+        if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
+            return pair.getRight();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a table name from a URI.
+     * Essentially extracts the local name of the URI
+     * */
     public static String getTableFromURI(String base, IRI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getLeft();
@@ -24,6 +57,22 @@ public class CqlMapper {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getRight();
     }
+
+    /**
+     * Returns a cql substring that contains all relevant column restrictions
+     */
+    public static String getRestrictionsFromSubjectURI(String base, String table, IRI subject) {
+        Pair<String, String> pair = decompose(base, subject);
+        if (pair.getLeft().equals(table)) {
+            try {
+                return URLDecoder.decode(pair.getRight(),"UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        throw new IllegalArgumentException();
+    }
+
 
     /***
      * Translates a Value to a CQLValue string representation
@@ -45,6 +94,15 @@ public class CqlMapper {
                 return v.stringValue();
             }
             else {
+                if (((Literal) v).getDatatype() == null) {
+                    return "\'" + v.stringValue() + "\'";
+                }
+                if (((Literal) v).getDatatype().equals(CDT.UDT)) {
+                    return v.stringValue();
+                }
+                if (((Literal) v).getDatatype().equals(CDT.SET)) {
+                    return v.stringValue();
+                }
                 return "\'" + v.stringValue() + "\'";
             }
 

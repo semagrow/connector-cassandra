@@ -1,5 +1,6 @@
 package eu.semagrow.cassandra.connector;
 
+import eu.semagrow.cassandra.vocab.CDT;
 import eu.semagrow.cassandra.vocab.CDV;
 import eu.semagrow.commons.utils.FileUtils;
 import eu.semagrow.commons.vocabulary.VOID;
@@ -25,7 +26,7 @@ import java.util.Map;
  */
 public class CassandraSchemaInit {
 
-    //private static final String path = "/home/antonis/Documents/cassandra/cdfheaderdesc.n3";
+    private IRI[] complexDatatypes = { CDT.MAP, CDT.SET, CDT.LIST }; // add more if something doesn't work
 
     private static final String queryPrefix = "" +
             "PREFIX cdv:  <"  + CDV.NAMESPACE  + "> \n" +
@@ -114,12 +115,12 @@ public class CassandraSchemaInit {
             throws MalformedQueryException, QueryEvaluationException, RepositoryException {
 
         String query = queryPrefix +
-                "SELECT ?endpoint ?address ?port ?keynote ?base WHERE { \n" +
+                "SELECT ?endpoint ?address ?port ?keyspace ?base WHERE { \n" +
                 "   ?d rdf:type cdv:cassandraDB . \n" +
                 "   ?d void:sparqlEndpoint ?endpoint . \n" +
                 "   ?d cdv:address ?address . \n" +
                 "   ?d cdv:port ?port . \n" +
-                "   ?d cdv:keynote ?keynote . \n" +
+                "   ?d cdv:keyspace ?keyspace . \n" +
                 "   ?d cdv:base ?base . \n" +
                 "}";
 
@@ -134,7 +135,7 @@ public class CassandraSchemaInit {
                 cs.setCredentials(
                         bs.getValue("address").stringValue(),
                         Integer.valueOf(bs.getValue("port").stringValue()),
-                        bs.getValue("keynote").stringValue()
+                        bs.getValue("keyspace").stringValue()
                 );
             }
         } finally {
@@ -172,7 +173,7 @@ public class CassandraSchemaInit {
             throws MalformedQueryException, QueryEvaluationException, RepositoryException {
 
         String query = queryPrefix +
-                "SELECT ?endpoint ?columnname ?tablename ?type ?position WHERE { \n" +
+                "SELECT ?endpoint ?columnname ?tablename ?type ?datatype ?position WHERE { \n" +
                 "   ?d rdf:type cdv:cassandraDB . \n" +
                 "   ?d void:sparqlEndpoint ?endpoint . \n" +
                 "   ?table cdv:name ?tablename . \n" +
@@ -180,6 +181,7 @@ public class CassandraSchemaInit {
                 "   ?schema cdv:columns ?column . \n" +
                 "   ?column cdv:columnType ?type . \n" +
                 "   ?column cdv:name ?columnname . \n" +
+                "   ?column cdv:datatype ?datatype . \n" +
                 "   OPTIONAL { ?column cdv:clusteringPosition ?position . } \n" +
                 "}";
 
@@ -193,6 +195,7 @@ public class CassandraSchemaInit {
                 IRI type = (IRI) bs.getValue("type");
                 String column = bs.getValue("columnname").stringValue();
                 String table = bs.getValue("tablename").stringValue();
+                IRI datatype = (IRI) bs.getValue("datatype");
 
                 if (type.equals(CDV.PARTITION)) {
                     cs.addPartitionColumn(table, column);
@@ -203,6 +206,11 @@ public class CassandraSchemaInit {
                 }
                 if (type.equals(CDV.REGULAR)) {
                     cs.addRegularColumn(table, column);
+                }
+                for (IRI uri: complexDatatypes) {
+                    if (uri.equals(datatype)) {
+                        cs.makeComplex(table,column);
+                    }
                 }
             }
         } finally {

@@ -62,7 +62,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
             return evaluateCassandraImpl(site, expr);
         }
 
-        return sendCqlQuery(site, expr, Collections.singletonList(bindings));
+        return evaluateCassandraImpl(site, expr, Collections.singletonList(bindings));
     }
 
     private Stream<BindingSet> evaluateCassandraImpl(CassandraSite site, final TupleExpr expr, List<BindingSet> bindings)
@@ -127,24 +127,19 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         String cqlQuery;
 
         if (bindingsList.isEmpty()) {
-            cqlQuery = transformer.transformQuery(site.getBase(), expr);
+            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
         }
         else {
-            cqlQuery = transformer.transformQuery(site.getBase(), expr, bindingsList);
+            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
         }
 
-        CassandraClient client = new CassandraClient();
-
-        client.setCredentials(site.getAddress(), site.getPort(), site.getKeyspace());
-        client.connect();
+        CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
 
         logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
 
         Stream<BindingSet> result = Streams.from(client.execute(cqlQuery))
                 .filter(transformer::containsAllFields)
                 .map(transformer::getBindingSet);
-
-        client.close();
 
         return result;
     }
