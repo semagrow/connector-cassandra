@@ -18,8 +18,10 @@ public class CassandraSchema {
     private Set<String> tables = new HashSet<>();
     private Map<String, Set<String>> partitionColumns = new HashMap<>();
     private Map<String, List<String>> clusteringColumns = new HashMap<>();
+    private Map<String, Set<String>> publicKeyColumns = new HashMap<>();
     private Map<String, Set<String>> regularColumns = new HashMap<>();
     private Map<String, Set<String>> indexedColumns = new HashMap<>();
+    private Map<String, Set<String>> complexColumns = new HashMap<>();
 
     /* notice: the clustering order must be preserved in the list */
 
@@ -29,12 +31,15 @@ public class CassandraSchema {
         this.tables.add(table);
         this.partitionColumns.put(table, new HashSet<>());
         this.clusteringColumns.put(table, new ArrayList<>());
+        this.publicKeyColumns.put(table, new HashSet<>());
         this.regularColumns.put(table, new HashSet<>());
         this.indexedColumns.put(table, new HashSet<>());
+        this.complexColumns.put(table, new HashSet<>());
     }
 
     public void addPartitionColumn(String table, String column) {
         this.partitionColumns.get(table).add(column);
+        this.publicKeyColumns.get(table).add(column);
     }
 
     public void addRegularColumn(String table, String column) {
@@ -49,10 +54,15 @@ public class CassandraSchema {
             }
         }
         this.clusteringColumns.get(table).set(position, column);
+        this.publicKeyColumns.get(table).add(column);
     }
 
     public void addIndex(String table, String column) {
         this.indexedColumns.get(table).add(column);
+    }
+
+    public void makeComplex(String table, String column) {
+        this.complexColumns.get(table).add(column);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,12 +95,26 @@ public class CassandraSchema {
         return clusteringColumns.get(table);
     }
 
+    public Set<String> getPublicKey(String table) {
+        return publicKeyColumns.get(table);
+    }
+
     public Set<String> getRegularColumns(String table) {
         return regularColumns.get(table);
     }
 
     public boolean hasIndex(String table, String column) {
         return indexedColumns.get(table).contains(column);
+    }
+
+    private boolean hasComplexDatatype(String table, String column) {
+        return complexColumns.get(table).contains(column);
+    }
+
+    public boolean tableContainsColumn(String table, String column) {
+        return (partitionColumns.get(table).contains(column) ||
+                clusteringColumns.get(table).contains(column) ||
+                regularColumns.get(table).contains(column) );
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,21 +152,21 @@ public class CassandraSchema {
 
         if (!canRestrictPartitionColumns(table, restrictedPartitionColumns)) {
             for (String column: restrictedPartitionColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
         }
         if (!canRestrictClusteringColumns(table, restricedClusteringColumns)) {
             for (String column: restricedClusteringColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
         }
         if (!canRestrictRegularColumns(table, restrictedRegularColumns)) {
             for (String column: restrictedRegularColumns) {
-                if (!hasIndex(table,column)) {
+                if (!hasIndex(table,column) || hasComplexDatatype(table,column)) {
                     nonRestrictableColumns.add(column);
                 }
             }
@@ -161,7 +185,7 @@ public class CassandraSchema {
         return (restrictedPartitionColumns.isEmpty() ||
                 restrictedPartitionColumns.equals(partitionColumns) ||
                 restrictedPartitionColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> (this.hasIndex(table, column) && !this.hasComplexDatatype(table,column)))
         );
     }
 
@@ -179,7 +203,7 @@ public class CassandraSchema {
                 restrictions.indexOf(false) == -1 ||
                 restrictions.lastIndexOf(true) < restrictions.indexOf(false) ||
                 clusteringColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> this.hasIndex(table, column) && !this.hasComplexDatatype(table,column))
         );
     }
 
@@ -189,7 +213,7 @@ public class CassandraSchema {
 
         return (restrictedRegularColumns.isEmpty() ||
                 restrictedRegularColumns.stream()
-                        .allMatch(column -> this.hasIndex(table, column))
+                        .allMatch(column -> this.hasIndex(table, column) && !this.hasComplexDatatype(table,column))
         );
     }
 }

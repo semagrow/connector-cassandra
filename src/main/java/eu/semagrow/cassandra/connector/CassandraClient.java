@@ -1,11 +1,11 @@
 package eu.semagrow.cassandra.connector;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by antonis on 5/4/2016.
@@ -21,35 +21,32 @@ public class CassandraClient {
     private Cluster cluster;
     private Session session;
 
-    public void setCredentials(String address, int port, String keyspace) {
+    private static CassandraClient instance = null;
+
+    private CassandraClient() {}
+
+    public static CassandraClient getInstance(String address, int port, String keyspace) {
+        if (instance == null) {
+            instance = new CassandraClient();
+            instance.setCredentials(address, port, keyspace);
+            instance.connect();
+        }
+        return instance;
+    }
+
+    private void setCredentials(String address, int port, String keyspace) {
         this.address = address;
         this.port = port;
         this.keyspace = keyspace;
     }
 
-    public String getAddress() {
-        return this.address;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
-    public String getKeyspace() {
-        return this.keyspace;
-    }
-
-    public void connect() {
+    private void connect() {
         cluster = Cluster.builder().addContactPoint(address).withPort(port).build();
         session = cluster.connect();
         session.execute("USE " + keyspace + ";");
     }
 
-    public Collection<TableMetadata> getTables() {
-        return cluster.getMetadata().getKeyspace(keyspace).getTables();
-    }
-
-    public void close() {
+    private void close() {
         session.close();
         cluster.close();
     }
@@ -58,18 +55,6 @@ public class CassandraClient {
         logger.info("Sending query: {}", query);
         ResultSet results = session.execute(query);
         return results.all();
-    }
-
-    public long executeCount(String query) {
-
-        logger.info("Sending query: {}", query);
-        List<Row> results = session.execute(query).all();
-        logger.info("results: {}", results);
-
-        for (Row row : results) {
-            return row.getLong(0);
-        }
-        return 0;
     }
 
 }
