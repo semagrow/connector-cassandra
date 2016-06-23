@@ -1,10 +1,10 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
 import com.datastax.driver.core.Row;
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.connector.CassandraSchemaInit;
-import eu.semagrow.cassandra.mapping.CqlMapper;
-import eu.semagrow.cassandra.utils.Utils;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.connector.CassandraSchemaInit;
+import org.semagrow.cassandra.mapping.CqlMapper;
+import org.semagrow.cassandra.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;

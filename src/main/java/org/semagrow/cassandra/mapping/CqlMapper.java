@@ -1,7 +1,7 @@
-package eu.semagrow.cassandra.mapping;
+package org.semagrow.cassandra.mapping;
 
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.vocab.CDT;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.IRI;

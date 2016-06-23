@@ -1,11 +1,11 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
-import eu.semagrow.cassandra.CassandraSite;
-import eu.semagrow.cassandra.connector.CassandraClient;
-import eu.semagrow.cassandra.utils.BindingSetOpsImpl;
-import eu.semagrow.core.eval.QueryExecutor;
-import eu.semagrow.core.eval.BindingSetOps;
-import eu.semagrow.core.source.Site;
+import org.semagrow.cassandra.CassandraSite;
+import org.semagrow.cassandra.connector.CassandraClient;
+import org.semagrow.cassandra.utils.BindingSetOpsImpl;
+import org.semagrow.evaluation.QueryExecutor;
+import org.semagrow.evaluation.BindingSetOps;
+import org.semagrow.selector.Site;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.algebra.TupleExpr;

@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.utils;
+package org.semagrow.cassandra.utils;
 
 import java.util.*;
 import java.util.stream.Collector;

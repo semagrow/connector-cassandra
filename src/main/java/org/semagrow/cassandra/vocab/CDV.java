@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.vocab;
+package org.semagrow.cassandra.vocab;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;

@@ -1,19 +1,19 @@
-package eu.semagrow.cassandra.connector;
+package org.semagrow.cassandra.connector;
 
-import eu.semagrow.cassandra.vocab.CDT;
-import eu.semagrow.cassandra.vocab.CDV;
-import eu.semagrow.commons.utils.FileUtils;
-import eu.semagrow.commons.vocabulary.VOID;
+import org.semagrow.cassandra.vocab.CDT;
+import org.semagrow.cassandra.vocab.CDV;
+import org.semagrow.util.FileUtils;
+import org.semagrow.model.vocabulary.VOID;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
+import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFParserRegistry;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,8 +1,8 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
 import com.datastax.driver.core.Row;
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.mapping.RdfMapper;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.mapping.RdfMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Value;

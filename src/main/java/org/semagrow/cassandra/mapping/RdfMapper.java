@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.mapping;
+package org.semagrow.cassandra.mapping;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
@@ -6,7 +6,7 @@ import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import eu.semagrow.cassandra.vocab.CDT;
+import org.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.StringUtils;
 
 

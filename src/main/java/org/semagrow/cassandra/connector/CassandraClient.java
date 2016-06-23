@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.connector;
+package org.semagrow.cassandra.connector;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;

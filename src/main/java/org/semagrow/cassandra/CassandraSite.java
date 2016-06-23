@@ -1,9 +1,9 @@
-package eu.semagrow.cassandra;
+package org.semagrow.cassandra;
 
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.connector.CassandraSchemaInit;
-import eu.semagrow.core.source.Site;
-import eu.semagrow.core.source.SourceCapabilities;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.connector.CassandraSchemaInit;
+import org.semagrow.selector.Site;
+import org.semagrow.selector.SiteCapabilities;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.IRI;
 
@@ -25,14 +25,11 @@ public class CassandraSite implements Site {
     public IRI getURI() { return endpoint; }
 
     @Override
-    public boolean isLocal() { return false; }
-
-    @Override
     public boolean isRemote() { return true; }
 
     @Override
-    public SourceCapabilities getCapabilities() {
-        return new CassandraCapabilities(getCassandraSchema(), getBase());
+    public SiteCapabilities getCapabilities() {
+        return new CassandraSiteCapabilities(getCassandraSchema(), getBase());
     }
 
     public CassandraSchema getCassandraSchema() {

@@ -1,10 +1,10 @@
-package eu.semagrow.cassandra.config;
+package org.semagrow.cassandra.config;
 
-import eu.semagrow.cassandra.eval.CassandraQueryExecutorImpl;
-import eu.semagrow.core.eval.QueryExecutor;
-import eu.semagrow.core.eval.QueryExecutorConfigException;
-import eu.semagrow.core.eval.QueryExecutorFactory;
-import eu.semagrow.core.eval.QueryExecutorImplConfig;
+import org.semagrow.cassandra.eval.CassandraQueryExecutorImpl;
+import org.semagrow.evaluation.QueryExecutor;
+import org.semagrow.evaluation.QueryExecutorConfigException;
+import org.semagrow.evaluation.QueryExecutorFactory;
+import org.semagrow.evaluation.QueryExecutorImplConfig;
 
 /**
  * Created by angel on 5/4/2016.

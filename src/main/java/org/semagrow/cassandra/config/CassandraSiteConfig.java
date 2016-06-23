@@ -1,6 +1,6 @@
-package eu.semagrow.cassandra.config;
+package org.semagrow.cassandra.config;
 
-import eu.semagrow.core.source.SiteConfig;
+import org.semagrow.selector.SiteConfig;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.IRI;
@@ -13,6 +13,7 @@ public class CassandraSiteConfig implements SiteConfig {
     public static String TYPE = "CASSANDRA";
 
     private IRI endpoint;
+    private String id;
 
     @Override
     public String getType() {
@@ -21,6 +22,16 @@ public class CassandraSiteConfig implements SiteConfig {
 
     @Override
     public void validate() { }
+
+    @Override
+    public String getSiteId() {
+        return id;
+    }
+
+    @Override
+    public void setSiteId(String s) {
+        id = s;
+    }
 
     public Resource export(Model graph) {
         return null;
