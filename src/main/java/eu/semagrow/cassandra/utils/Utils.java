@@ -26,7 +26,7 @@ public final class Utils {
 
     public static <T> Set<T> union(Set<T> p, Set<T> q) {
         Set<T> result = new HashSet<>(p);
-        p.addAll(q);
+        result.addAll(q);
         return result;
     }
 
