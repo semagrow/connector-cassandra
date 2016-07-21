@@ -2,15 +2,23 @@ package eu.semagrow.cassandra.eval;
 
 import eu.semagrow.cassandra.CassandraSite;
 import eu.semagrow.cassandra.connector.CassandraClient;
+import eu.semagrow.cassandra.connector.CassandraSchema;
+import eu.semagrow.cassandra.connector.CassandraSchemaInit;
+import eu.semagrow.cassandra.mapping.RdfMapper;
 import eu.semagrow.cassandra.utils.BindingSetOpsImpl;
-import eu.semagrow.core.eval.QueryExecutor;
 import eu.semagrow.core.eval.BindingSetOps;
+import eu.semagrow.core.eval.QueryExecutor;
 import eu.semagrow.core.source.Site;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.algebra.StatementPattern;
 import org.openrdf.query.algebra.TupleExpr;
 import org.openrdf.query.algebra.Var;
+import org.openrdf.query.algebra.evaluation.QueryBindingSet;
 import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
+import org.openrdf.query.algebra.helpers.StatementPatternCollector;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +130,10 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
 
     private Stream<BindingSet> sendCqlQuery(CassandraSite site, TupleExpr expr, List<BindingSet> bindingsList) {
 
+        if (checkPredVar(expr)) {
+            return sendCqlQueryPredVar(site, expr, bindingsList);
+        }
+
         CassandraQueryTransformer transformer = new CassandraQueryTransformer();
 
         String cqlQuery;
@@ -149,6 +161,45 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         bindingsList.add(bindings);
         Stream<BindingSet> result = sendCqlQuery(site, expr, bindingsList);
         return (!result.equals(Streams.empty()));
+    }
+
+    private Stream<BindingSet> sendCqlQueryPredVar(CassandraSite site, TupleExpr expr, List<BindingSet> bindingsList) {
+
+        StatementPattern pattern = StatementPatternCollector.process(expr).get(0);
+        CassandraSchema cassandraSchema = CassandraSchemaInit.getInstance().getCassandraSchema(site.getURI());
+        CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
+
+        if (pattern.getSubjectVar().hasValue()) {
+            //todo
+            return null;
+        }
+        else {
+            String base = cassandraSchema.getBase();
+            return Streams.from(cassandraSchema.getTables())
+                    .map(table -> "select * from " + table +" allow filtering;")
+                    .flatMap(cqlstring -> Streams.from(client.execute(cqlstring)))
+                    .flatMap(row -> {
+                        String table = row.getColumnDefinitions().getTable(0);
+                        URI subjValue = RdfMapper.getSubjectURIFromRow(base, table, row, cassandraSchema.getPublicKey(table));
+
+                        return Streams.from(row.getColumnDefinitions().asList())
+                            .map(column -> {
+                                URI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
+                                Value objValue = RdfMapper.getLiteralFromCassandraResult(row, column.getName());
+                                QueryBindingSet bindings = new QueryBindingSet();
+                                bindings.addBinding(pattern.getSubjectVar().getName(), subjValue);
+                                bindings.addBinding(pattern.getPredicateVar().getName(), predValue);
+                                bindings.addBinding(pattern.getObjectVar().getName(), objValue);
+
+                                return bindings;
+                            });
+                    });
+        }
+    }
+
+    private boolean checkPredVar(TupleExpr expr) {
+        List<StatementPattern> statementPatterns = StatementPatternCollector.process(expr);
+        return ((statementPatterns.size() == 1) && (!statementPatterns.get(0).getPredicateVar().hasValue()));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

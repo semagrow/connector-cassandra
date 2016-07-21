@@ -103,6 +103,10 @@ public class CassandraSchema {
         return regularColumns.get(table);
     }
 
+    public Set<String> getAllColumns(String table) {
+        return Utils.union(getPublicKey(table), getRegularColumns(table));
+    }
+
     public boolean hasIndex(String table, String column) {
         return indexedColumns.get(table).contains(column);
     }
