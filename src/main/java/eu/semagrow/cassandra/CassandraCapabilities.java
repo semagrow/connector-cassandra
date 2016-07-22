@@ -5,6 +5,8 @@ import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.utils.Utils;
 import eu.semagrow.core.plan.Plan;
 import eu.semagrow.core.source.SourceCapabilitiesBase;
+import org.apache.commons.collections.Bag;
+import org.apache.commons.collections.bag.HashBag;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
@@ -43,16 +45,21 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
     public boolean isJoinable(Plan p1, Plan p2) {
 
         /* both plans must contain triple patterns with the same subject
-         * and all triple pattern data must be contained in the same table. */
+         * all triple pattern data must be contained in the same table
+         * and all object variables must be different. */
 
         final Set<Var> subjects = new HashSet<>();
         final Set<Var> predicates = new HashSet<>();
+        final Bag objectVars = new HashBag();
 
         p1.visit(new QueryModelVisitorBase<RuntimeException>() {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
                 predicates.add(node.getPredicateVar());
+                if (!node.getSubjectVar().hasValue()) {
+                    objectVars.add(node.getSubjectVar().getName());
+                }
             }
         });
 
@@ -61,9 +68,13 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
                 predicates.add(node.getPredicateVar());
+                if (!node.getSubjectVar().hasValue()) {
+                    objectVars.add(node.getSubjectVar().getName());
+                }
             }
         });
-        return (subjects.size() == 1 && containedInSameTable(predicates));
+        return (subjects.size() == 1 && containedInSameTable(predicates) &&
+                objectVars.uniqueSet().stream().allMatch(var -> objectVars.getCount(var) == 1));
     }
 
     /* checks if all the columns that correspond to each predicate are contained in the same cassandra table */
