@@ -116,6 +116,13 @@ public class CassandraSchema {
     }
 
     public boolean tableContainsColumn(String table, String column) {
+        boolean flag = true;
+        if (table == null) {
+            for (String t: getTables()) {
+                flag = flag || tableContainsColumn(t,column);
+            }
+            return flag;
+        }
         return (partitionColumns.get(table).contains(column) ||
                 clusteringColumns.get(table).contains(column) ||
                 regularColumns.get(table).contains(column) );

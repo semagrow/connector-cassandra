@@ -4,6 +4,7 @@ import eu.semagrow.cassandra.CassandraSite;
 import eu.semagrow.cassandra.connector.CassandraClient;
 import eu.semagrow.cassandra.connector.CassandraSchema;
 import eu.semagrow.cassandra.connector.CassandraSchemaInit;
+import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.mapping.RdfMapper;
 import eu.semagrow.cassandra.utils.BindingSetOpsImpl;
 import eu.semagrow.core.eval.BindingSetOps;
@@ -168,13 +169,28 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         StatementPattern pattern = StatementPatternCollector.process(expr).get(0);
         CassandraSchema cassandraSchema = CassandraSchemaInit.getInstance().getCassandraSchema(site.getURI());
         CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
+        String base = cassandraSchema.getBase();
 
         if (pattern.getSubjectVar().hasValue()) {
-            //todo
-            return null;
+            URI subject = (URI) pattern.getSubjectVar().getValue();
+            String table = CqlMapper.getTableFromURI(base, subject);
+            String restrictions = CqlMapper.getRestrictionsFromSubjectURI(base, table, subject);
+            String cqlQuery = "select * from " + table + " where " + restrictions.replace(";"," and ") + ";";
+
+            return Streams.from(client.execute(cqlQuery))
+                    .flatMap(row -> Streams.from(row.getColumnDefinitions().asList())
+                        .map(column -> {
+                            URI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
+                            Value objValue = RdfMapper.getLiteralFromCassandraResult(row, column.getName());
+                            QueryBindingSet bindings = new QueryBindingSet();
+                            bindings.addBinding(pattern.getPredicateVar().getName(), predValue);
+                            bindings.addBinding(pattern.getObjectVar().getName(), objValue);
+
+                            return bindings;
+                        })
+                    );
         }
         else {
-            String base = cassandraSchema.getBase();
             return Streams.from(cassandraSchema.getTables())
                     .map(table -> "select * from " + table +" allow filtering;")
                     .flatMap(cqlstring -> Streams.from(client.execute(cqlstring)))

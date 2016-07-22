@@ -47,7 +47,6 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
         final Set<Var> subjects = new HashSet<>();
         final Set<Var> predicates = new HashSet<>();
-        boolean flag = true;
 
         p1.visit(new QueryModelVisitorBase<RuntimeException>() {
             @Override
@@ -145,23 +144,6 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
         List<StatementPattern> statementPatterns = StatementPatternCollector.process(plan);
         if ((statementPatterns.size() == 1) && (!statementPatterns.get(0).getPredicateVar().hasValue())) {
-            /* patterns with predicate variable - push the extra work to query executor */
-            /*StatementPattern pattern = statementPatterns.get(0);
-
-            Set<TupleExpr> allPatterns = cassandraSchema.getTables().stream()
-                    .flatMap(table -> {
-                        return cassandraSchema.getAllColumns(table).stream()
-                                .map(column -> RdfMapper.getUriFromColumn(base, table, column));
-                    })
-                    .map(uri -> new StatementPattern(
-                            pattern.getSubjectVar().clone(),
-                            new Var("-const-"+uri.toString()+"-uri", uri),
-                            pattern.getObjectVar().clone()))
-                    .collect(Collectors.toSet());
-
-            TupleExpr union = allPatterns.stream()
-                    .reduce(new EmptySet(), (p1, p2) -> new Union(p1,p2));
-            */
             Plan newPlan = new Plan(plan.getKey(), statementPatterns.get(0));
             newPlan.setProperties(plan.getProperties());
             return newPlan;

@@ -116,6 +116,10 @@ public class CqlMapper {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static Pair<String, String> decompose(String base, URI predicate) {
+
+        if (predicate == null) {
+            return Pair.of(null,null);
+        }
         String value = predicate.stringValue();
         int columnStart = value.lastIndexOf("#") + 1;
         int predicateStart = value.lastIndexOf("/") + 1;
