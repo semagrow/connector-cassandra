@@ -143,6 +143,7 @@ public class CassandraQueryTransformer {
 
         Set<String> wheres = restrictions.stream()
                 .map(r -> r.getRestrictionString())
+                .distinct()
                 .collect(Collectors.toSet());
 
         /* build query string */
@@ -204,17 +205,22 @@ public class CassandraQueryTransformer {
     private void addSubjectRestrictions(Set<Restriction> subjectRestrictions, String base, String table, Set<URI> subjectBindings) {
         Map<String, Set<String>> columnRestrictions = new HashMap<>();
         for (URI uri: subjectBindings) {
-            String restrictionsString = CqlMapper.getRestrictionsFromSubjectURI(base, table, uri);
-            for (String restrictionString : StringUtils.split(restrictionsString,";")) {
-                String restriction[] = StringUtils.split(restrictionString, "=");
-                String name = restriction[0];
-                String value = restriction[1];
-                Set<String> set = columnRestrictions.get(name);
-                if (set == null) {
-                    columnRestrictions.put(name, new HashSet<>());
-                    set = columnRestrictions.get(name);
+            try {
+                String restrictionsString = CqlMapper.getRestrictionsFromSubjectURI(base, table, uri);
+
+                for (String restrictionString : StringUtils.split(restrictionsString, ";")) {
+                    String restriction[] = StringUtils.split(restrictionString, "=");
+                    String name = restriction[0];
+                    String value = restriction[1];
+                    Set<String> set = columnRestrictions.get(name);
+                    if (set == null) {
+                        columnRestrictions.put(name, new HashSet<>());
+                        set = columnRestrictions.get(name);
+                    }
+                    set.add(value);
                 }
-                set.add(value);
+            } catch ( IllegalArgumentException e) {
+                // the uri is not joinable in this table
             }
         }
         for (String name: columnRestrictions.keySet()) {

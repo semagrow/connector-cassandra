@@ -170,6 +170,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         CassandraSchema cassandraSchema = CassandraSchemaInit.getInstance().getCassandraSchema(site.getURI());
         CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
         String base = cassandraSchema.getBase();
+        Stream<BindingSet> output;
 
         if (pattern.getSubjectVar().hasValue()) {
             URI subject = (URI) pattern.getSubjectVar().getValue();
@@ -177,7 +178,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
             String restrictions = CqlMapper.getRestrictionsFromSubjectURI(base, table, subject);
             String cqlQuery = "select * from " + table + " where " + restrictions.replace(";"," and ") + ";";
 
-            return Streams.from(client.execute(cqlQuery))
+            output = Streams.from(client.execute(cqlQuery))
                     .flatMap(row -> Streams.from(row.getColumnDefinitions().asList())
                         .map(column -> {
                             URI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
@@ -191,7 +192,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
                     );
         }
         else {
-            return Streams.from(cassandraSchema.getTables())
+            output = Streams.from(cassandraSchema.getTables())
                     .map(table -> "select * from " + table +" allow filtering;")
                     .flatMap(cqlstring -> Streams.from(client.execute(cqlstring)))
                     .flatMap(row -> {
@@ -211,6 +212,12 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
                             });
                     });
         }
+        return output.filter(bindings -> {
+            if (pattern.getObjectVar().hasValue()) {
+                return bindings.getValue(pattern.getObjectVar().getName()).equals(pattern.getObjectVar().getValue());
+            }
+            else return true;
+        });
     }
 
     private boolean checkPredVar(TupleExpr expr) {
