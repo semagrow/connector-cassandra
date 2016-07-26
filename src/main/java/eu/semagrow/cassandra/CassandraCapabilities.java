@@ -5,8 +5,6 @@ import eu.semagrow.cassandra.mapping.CqlMapper;
 import eu.semagrow.cassandra.utils.Utils;
 import eu.semagrow.core.plan.Plan;
 import eu.semagrow.core.source.SourceCapabilitiesBase;
-import org.apache.commons.collections.Bag;
-import org.apache.commons.collections.bag.HashBag;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
@@ -50,15 +48,15 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
 
         final Set<Var> subjects = new HashSet<>();
         final Set<Var> predicates = new HashSet<>();
-        final Bag objectVars = new HashBag();
+        final List<String> objectVars = new ArrayList<>();
 
         p1.visit(new QueryModelVisitorBase<RuntimeException>() {
             @Override
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
                 predicates.add(node.getPredicateVar());
-                if (!node.getSubjectVar().hasValue()) {
-                    objectVars.add(node.getSubjectVar().getName());
+                if (!node.getObjectVar().hasValue()) {
+                    objectVars.add(node.getObjectVar().getName());
                 }
             }
         });
@@ -68,13 +66,13 @@ public class CassandraCapabilities extends SourceCapabilitiesBase {
             public void meet(StatementPattern node) throws RuntimeException {
                 subjects.add(node.getSubjectVar());
                 predicates.add(node.getPredicateVar());
-                if (!node.getSubjectVar().hasValue()) {
-                    objectVars.add(node.getSubjectVar().getName());
+                if (!node.getObjectVar().hasValue()) {
+                    objectVars.add(node.getObjectVar().getName());
                 }
             }
         });
         return (subjects.size() == 1 && containedInSameTable(predicates) &&
-                objectVars.uniqueSet().stream().allMatch(var -> objectVars.getCount(var) == 1));
+                objectVars.stream().count() == objectVars.stream().distinct().count());
     }
 
     /* checks if all the columns that correspond to each predicate are contained in the same cassandra table */
