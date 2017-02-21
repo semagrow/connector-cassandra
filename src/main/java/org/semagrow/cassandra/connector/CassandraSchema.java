@@ -1,6 +1,6 @@
-package eu.semagrow.cassandra.connector;
+package org.semagrow.cassandra.connector;
 
-import eu.semagrow.cassandra.utils.Utils;
+import org.semagrow.cassandra.utils.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;

@@ -1,15 +1,15 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
 import com.datastax.driver.core.Row;
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.mapping.RdfMapper;
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.query.Binding;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.impl.BindingImpl;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.mapping.RdfMapper;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.impl.SimpleBinding;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -62,14 +62,14 @@ public class CassandraBindingSet implements BindingSet {
 
         if (v.equals(subjectVar)) {
             //return new BindingImpl(subjectVar, subjectResource);
-            URI uri = RdfMapper.getSubjectURIFromRow(base, table, internalRep, cassandraSchema.getPublicKey(table));
-            return new BindingImpl(subjectVar, uri);
+            IRI uri = RdfMapper.getSubjectURIFromRow(base, table, internalRep, cassandraSchema.getPublicKey(table));
+            return new SimpleBinding(subjectVar, uri);
         }
         else {
             String c = var2column.get(v);
             if (c != null) {
                 Value value = RdfMapper.getLiteralFromCassandraResult(internalRep, c);
-                return new BindingImpl(v, value);
+                return new SimpleBinding(v, value);
             }
             else {
                 return null;

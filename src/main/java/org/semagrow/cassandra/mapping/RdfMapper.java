@@ -1,13 +1,14 @@
-package eu.semagrow.cassandra.mapping;
+package org.semagrow.cassandra.mapping;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
-import eu.semagrow.cassandra.vocab.CDT;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.StringUtils;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
+
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -19,19 +20,19 @@ import java.util.Set;
  */
 public class RdfMapper {
 
-    private static final ValueFactory vf = ValueFactoryImpl.getInstance();
+    private static final ValueFactory vf = SimpleValueFactory.getInstance();
 
-    public static URI getUriFromTable(String base, String table) {
+    public static IRI getUriFromTable(String base, String table) {
         String uriString = base + "/" + table;
-        return vf.createURI(uriString);
+        return vf.createIRI(uriString);
     }
 
-    public static URI getUriFromColumn(String base, String table, String column) {
+    public static IRI getUriFromColumn(String base, String table, String column) {
         String uriString = base + "/" + table + "#" + column;
-        return vf.createURI(uriString);
+        return vf.createIRI(uriString);
     }
 
-    public static URI getSubjectURIFromRow(String base, String table, Row row, Set<String> publicKey) {
+    public static IRI getSubjectURIFromRow(String base, String table, Row row, Set<String> publicKey) {
         Set<String> substrings = new HashSet<>();
         for (String column : publicKey) {
             substrings.add(column + "=" + getStringFromCassandraResult(row, column));
@@ -42,7 +43,7 @@ public class RdfMapper {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return vf.createURI(uriString);
+        return vf.createIRI(uriString);
     }
 
     public static Value getLiteralFromCassandraResult(Row row, String columnname) {
@@ -55,7 +56,7 @@ public class RdfMapper {
         if (dataType.equals(DataType.ascii()) || dataType.equals(DataType.varchar()) || dataType.equals(DataType.text()) || dataType.equals(DataType.inet())) {
             String result = row.getString(columnname);
             if (result.startsWith("<") && result.endsWith(">")) {
-                return vf.createURI(result.substring(1,result.length()-1));
+                return vf.createIRI(result.substring(1,result.length()-1));
             }
             else {
                 return vf.createLiteral(result);

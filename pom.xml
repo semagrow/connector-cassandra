@@ -2,10 +2,10 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>eu.semagrow</groupId>
-    <artifactId>semagrow-cassandra</artifactId>
-    <version>1.5.1</version>
-    <name>semagrow-cassandra</name>
+    <groupId>org.semagrow</groupId>
+    <artifactId>semagrow-connector-cassandra</artifactId>
+    <version>2.0-SNAPSHOT</version>
+    <name>semagrow-connector-cassandra</name>
     <build>
         <plugins>
             <plugin>
@@ -30,24 +30,14 @@
     </build>
     <dependencies>                
         <dependency>
-            <groupId>eu.semagrow</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>semagrow-core-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>eu.semagrow</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>semagrow-commons</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.reactivex</groupId>
-            <artifactId>rxjava</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.reactivex</groupId>
-            <artifactId>rxjava-reactive-streams</artifactId>
-            <version>0.3.0</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
@@ -63,6 +53,17 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-sail-memory</artifactId>
+            <version>2.0M2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-repository-sail</artifactId>
+            <version>2.0M2</version>
         </dependency>
     </dependencies>
 

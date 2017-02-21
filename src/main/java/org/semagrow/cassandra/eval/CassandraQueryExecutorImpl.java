@@ -1,25 +1,25 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
-import eu.semagrow.cassandra.CassandraSite;
-import eu.semagrow.cassandra.connector.CassandraClient;
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.connector.CassandraSchemaInit;
-import eu.semagrow.cassandra.mapping.CqlMapper;
-import eu.semagrow.cassandra.mapping.RdfMapper;
-import eu.semagrow.cassandra.utils.BindingSetOpsImpl;
-import eu.semagrow.core.eval.BindingSetOps;
-import eu.semagrow.core.eval.QueryExecutor;
-import eu.semagrow.core.source.Site;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.algebra.StatementPattern;
-import org.openrdf.query.algebra.TupleExpr;
-import org.openrdf.query.algebra.Var;
-import org.openrdf.query.algebra.evaluation.QueryBindingSet;
-import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
-import org.openrdf.query.algebra.helpers.StatementPatternCollector;
+import org.semagrow.cassandra.CassandraSite;
+import org.semagrow.cassandra.connector.CassandraClient;
+import org.semagrow.cassandra.utils.BindingSetOpsImpl;
+import org.semagrow.evaluation.QueryExecutor;
+import org.semagrow.evaluation.BindingSetOps;
+import org.semagrow.selector.Site;
+
+// import eu.semagrow.cassandra.connector.CassandraSchema;
+// import eu.semagrow.cassandra.connector.CassandraSchemaInit;
+// import eu.semagrow.cassandra.mapping.CqlMapper;
+// import eu.semagrow.cassandra.mapping.RdfMapper;
+// import org.openrdf.query.QueryEvaluationException;
+// import org.openrdf.query.algebra.StatementPattern;
+// import org.openrdf.query.algebra.TupleExpr;
+// import org.openrdf.query.algebra.Var;
+// import org.openrdf.query.algebra.evaluation.QueryBindingSet;
+// import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
+// import org.openrdf.query.algebra.helpers.StatementPatternCollector;
+// import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
+
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,7 +229,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
 
     private Set<String> computeVars(TupleExpr serviceExpression) {
         final Set<String> res = new HashSet<String>();
-        serviceExpression.visit(new QueryModelVisitorBase<RuntimeException>() {
+        serviceExpression.visit(new AbstractQueryModelVisitor<RuntimeException>() {
 
             @Override
             public void meet(Var node)
