@@ -1,32 +1,33 @@
 package org.semagrow.cassandra.eval;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.algebra.StatementPattern;
+import org.eclipse.rdf4j.query.algebra.TupleExpr;
+import org.eclipse.rdf4j.query.algebra.Var;
+import org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet;
+import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
+import org.eclipse.rdf4j.query.algebra.helpers.StatementPatternCollector;
+import org.reactivestreams.Publisher;
 import org.semagrow.cassandra.CassandraSite;
 import org.semagrow.cassandra.connector.CassandraClient;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.connector.CassandraSchemaInit;
+import org.semagrow.cassandra.mapping.CqlMapper;
+import org.semagrow.cassandra.mapping.RdfMapper;
 import org.semagrow.cassandra.utils.BindingSetOpsImpl;
-import org.semagrow.evaluation.QueryExecutor;
 import org.semagrow.evaluation.BindingSetOps;
+import org.semagrow.evaluation.QueryExecutor;
 import org.semagrow.selector.Site;
-
-// import eu.semagrow.cassandra.connector.CassandraSchema;
-// import eu.semagrow.cassandra.connector.CassandraSchemaInit;
-// import eu.semagrow.cassandra.mapping.CqlMapper;
-// import eu.semagrow.cassandra.mapping.RdfMapper;
-// import org.openrdf.query.QueryEvaluationException;
-// import org.openrdf.query.algebra.StatementPattern;
-// import org.openrdf.query.algebra.TupleExpr;
-// import org.openrdf.query.algebra.Var;
-// import org.openrdf.query.algebra.evaluation.QueryBindingSet;
-// import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
-// import org.openrdf.query.algebra.helpers.StatementPatternCollector;
-// import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
-
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.rx.Stream;
 import reactor.rx.Streams;
 
 import java.util.*;
+
 
 /**
  * Created by antonis on 21/3/2016.
@@ -173,7 +174,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         Stream<BindingSet> output;
 
         if (pattern.getSubjectVar().hasValue()) {
-            URI subject = (URI) pattern.getSubjectVar().getValue();
+            IRI subject = (IRI) pattern.getSubjectVar().getValue();
             String table = CqlMapper.getTableFromURI(base, subject);
             String restrictions = CqlMapper.getRestrictionsFromSubjectURI(base, table, subject);
             String cqlQuery = "select * from " + table + " where " + restrictions.replace(";"," and ") + ";";
@@ -181,7 +182,7 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
             output = Streams.from(client.execute(cqlQuery))
                     .flatMap(row -> Streams.from(row.getColumnDefinitions().asList())
                         .map(column -> {
-                            URI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
+                            IRI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
                             Value objValue = RdfMapper.getLiteralFromCassandraResult(row, column.getName());
                             QueryBindingSet bindings = new QueryBindingSet();
                             bindings.addBinding(pattern.getPredicateVar().getName(), predValue);
@@ -197,11 +198,11 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
                     .flatMap(cqlstring -> Streams.from(client.execute(cqlstring)))
                     .flatMap(row -> {
                         String table = row.getColumnDefinitions().getTable(0);
-                        URI subjValue = RdfMapper.getSubjectURIFromRow(base, table, row, cassandraSchema.getPublicKey(table));
+                        IRI subjValue = RdfMapper.getSubjectURIFromRow(base, table, row, cassandraSchema.getPublicKey(table));
 
                         return Streams.from(row.getColumnDefinitions().asList())
                             .map(column -> {
-                                URI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
+                                IRI predValue = RdfMapper.getUriFromColumn(base, table, column.getName());
                                 Value objValue = RdfMapper.getLiteralFromCassandraResult(row, column.getName());
                                 QueryBindingSet bindings = new QueryBindingSet();
                                 bindings.addBinding(pattern.getSubjectVar().getName(), subjValue);
