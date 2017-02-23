@@ -153,7 +153,7 @@ public class CassandraSiteCapabilities extends AbstractSiteCapabilities {
 
         List<StatementPattern> statementPatterns = StatementPatternCollector.process(plan);
         if ((statementPatterns.size() == 1) && (!statementPatterns.get(0).getPredicateVar().hasValue())) {
-            Plan newPlan = new Plan(plan.getKey(), statementPatterns.get(0));
+            Plan newPlan = new Plan(statementPatterns.get(0));
             newPlan.setProperties(plan.getProperties());
             return newPlan;
         }
