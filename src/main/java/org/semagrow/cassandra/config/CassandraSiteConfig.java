@@ -1,5 +1,6 @@
 package org.semagrow.cassandra.config;
 
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.semagrow.selector.SiteConfig;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.Resource;
@@ -31,6 +32,7 @@ public class CassandraSiteConfig implements SiteConfig {
     @Override
     public void setSiteId(String s) {
         id = s;
+        setEndpoint(SimpleValueFactory.getInstance().createIRI(id));
     }
 
     public Resource export(Model graph) {
