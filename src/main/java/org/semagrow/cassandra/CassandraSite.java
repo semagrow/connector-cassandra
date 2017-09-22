@@ -32,6 +32,15 @@ public class CassandraSite implements Site {
         return new CassandraSiteCapabilities(getCassandraSchema(), getBase());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CassandraSite) {
+            CassandraSite s = (CassandraSite)o;
+            return (s.getURI().equals(this.getURI()));
+        }
+        return false;
+    }
+
     public CassandraSchema getCassandraSchema() {
         return CassandraSchemaInit.getInstance().getCassandraSchema(endpoint);
     }
