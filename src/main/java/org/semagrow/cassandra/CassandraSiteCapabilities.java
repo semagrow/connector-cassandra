@@ -91,14 +91,15 @@ public class CassandraSiteCapabilities extends AbstractSiteCapabilities {
     public boolean acceptsBindings(Plan plan, Set<String> vars) {
 
         /* get table and restricted columns */
-
         List<StatementPattern> statementPatterns = StatementPatternCollector.process(plan);
-        String table = getRelevantTable(statementPatterns);
-        Set<String> restrictedColumns = getRestrictedColumns(statementPatterns, vars);
-
-        /* checks if the restricted columns in the plan can be actually restricted in cassandra */
-
-        return cassandraSchema.canRestrictColumns(restrictedColumns,table);
+        try {
+            String table = getRelevantTable(statementPatterns);
+            Set<String> restrictedColumns = getRestrictedColumns(statementPatterns, vars);
+            /* checks if the restricted columns in the plan can be actually restricted in cassandra */
+            return cassandraSchema.canRestrictColumns(restrictedColumns, table);
+        } catch (IllegalStateException e) {
+            return false;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
