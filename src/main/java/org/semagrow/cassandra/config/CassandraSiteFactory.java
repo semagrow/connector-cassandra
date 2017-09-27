@@ -1,10 +1,9 @@
-package eu.semagrow.cassandra.config;
+package org.semagrow.cassandra.config;
 
-import eu.semagrow.cassandra.CassandraSite;
-import eu.semagrow.core.source.Site;
-import eu.semagrow.core.source.SiteConfig;
-import eu.semagrow.core.source.SiteFactory;
-import org.openrdf.model.URI;
+import org.semagrow.cassandra.CassandraSite;
+import org.semagrow.selector.Site;
+import org.semagrow.selector.SiteConfig;
+import org.semagrow.selector.SiteFactory;
 
 /**
  * Created by angel on 5/4/2016.
@@ -32,8 +31,4 @@ public class CassandraSiteFactory implements SiteFactory {
 
     }
 
-    @Override
-    public Site getSite(URI endpoint) {
-        return new CassandraSite(endpoint);
-    }
 }

@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
 import java.util.Map;
 

@@ -1,18 +1,18 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
 import com.datastax.driver.core.Row;
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.connector.CassandraSchemaInit;
-import eu.semagrow.cassandra.mapping.CqlMapper;
-import eu.semagrow.cassandra.utils.Utils;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.connector.CassandraSchemaInit;
+import org.semagrow.cassandra.mapping.CqlMapper;
+import org.semagrow.cassandra.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.algebra.*;
-import org.openrdf.query.algebra.helpers.QueryModelVisitorBase;
-import org.openrdf.query.algebra.helpers.StatementPatternCollector;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.algebra.*;
+import org.eclipse.rdf4j.query.algebra.helpers.AbstractQueryModelVisitor;
+import org.eclipse.rdf4j.query.algebra.helpers.StatementPatternCollector;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,10 +29,10 @@ public class CassandraQueryTransformer {
     private String base;
 
     private Map<String, String> var2column;
-    private URI endpoint;
+    private IRI endpoint;
     private CassandraSchema cassandraSchema;
 
-    public String transformQuery(String base, URI endpoint, TupleExpr expr) {
+    public String transformQuery(String base, IRI endpoint, TupleExpr expr) {
         return transformQuery(base, endpoint, expr, Collections.emptyList());
     }
 
@@ -43,7 +43,7 @@ public class CassandraQueryTransformer {
      * @param bindingSetList
      * @return
      */
-    public String transformQuery(String base, URI endpoint, TupleExpr expr, List<BindingSet> bindingSetList) {
+    public String transformQuery(String base, IRI endpoint, TupleExpr expr, List<BindingSet> bindingSetList) {
 
         this.endpoint = endpoint;
         this.base = base;
@@ -61,7 +61,7 @@ public class CassandraQueryTransformer {
         /* get cassandra relevant table: all pattern data must be in the same table */
 
         table = statementPatterns.stream()
-                .map(pattern -> (URI) pattern.getPredicateVar().getValue())
+                .map(pattern -> (IRI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getTableFromURI(base, uri))
                 .distinct()
                 .collect(Utils.singletonCollector());
@@ -69,7 +69,7 @@ public class CassandraQueryTransformer {
         /* get cassandra columns needed for CQL query renderer */
 
         Set<String> columns = statementPatterns.stream()
-                .map(pattern -> (URI) pattern.getPredicateVar().getValue())
+                .map(pattern -> (IRI) pattern.getPredicateVar().getValue())
                 .map(uri -> CqlMapper.getColumnFromURI(base, uri))
                 .collect(Collectors.toSet());
         columns.addAll(cassandraSchema.getPublicKey(table));
@@ -80,7 +80,7 @@ public class CassandraQueryTransformer {
         var2column = statementPatterns.stream()
                 .filter(pattern -> pattern.getObjectVar().getValue() == null)
                 .collect(Collectors.toMap(p -> p.getObjectVar().getName(),
-                                          p -> CqlMapper.getColumnFromURI(base, (URI) p.getPredicateVar().getValue())));
+                                          p -> CqlMapper.getColumnFromURI(base, (IRI) p.getPredicateVar().getValue())));
 
         /* get cassandra where restrictions */
 
@@ -88,9 +88,9 @@ public class CassandraQueryTransformer {
 
         Stream<Restriction> patternRestrictions = statementPatterns.stream()
                 .filter(p -> p.getObjectVar().getValue() != null)
-                .filter(p -> (!((URI) p.getPredicateVar().getValue()).equals(RDF.TYPE)))
+                .filter(p -> (!((IRI) p.getPredicateVar().getValue()).equals(RDF.TYPE)))
                 .map(p -> new Restriction(
-                        CqlMapper.getColumnFromURI(base, (URI) p.getPredicateVar().getValue()),
+                        CqlMapper.getColumnFromURI(base, (IRI) p.getPredicateVar().getValue()),
                         Compare.CompareOp.EQ,
                         CqlMapper.getCqlValueFromValue(base, p.getObjectVar().getValue())));
 
@@ -113,14 +113,14 @@ public class CassandraQueryTransformer {
         /* 3) restrictions from triple pattern subjects and subject bindings */
 
         Set<Restriction> subjectRestrictions = new HashSet<>();
-        Set<URI> uriSet = new HashSet<>();
+        Set<IRI> uriSet = new HashSet<>();
 
         if (subject.hasValue()) {
-            uriSet.add((URI) subject.getValue());
+            uriSet.add((IRI) subject.getValue());
         }
         if (bindings.keySet().contains(subject.getName())) {
             for (BindingSet bs: bindingSetList) {
-                uriSet.add((URI) bs.getBinding(subject.getName()).getValue());
+                uriSet.add((IRI) bs.getBinding(subject.getName()).getValue());
             }
         }
         addSubjectRestrictions(subjectRestrictions, base, table, uriSet);
@@ -143,6 +143,7 @@ public class CassandraQueryTransformer {
 
         Set<String> wheres = restrictions.stream()
                 .map(r -> r.getRestrictionString())
+                .distinct()
                 .collect(Collectors.toSet());
 
         /* build query string */
@@ -171,7 +172,7 @@ public class CassandraQueryTransformer {
      */
     public BindingSet getBindingSet(Row row)
     {
-        return new CassandraBindingSet(subject.getName(), base, table, cassandraSchema, row, var2column, ValueFactoryImpl.getInstance());
+        return new CassandraBindingSet(subject.getName(), base, table, cassandraSchema, row, var2column, SimpleValueFactory.getInstance());
 
         /*
         QueryBindingSet bindings = new QueryBindingSet();
@@ -201,20 +202,25 @@ public class CassandraQueryTransformer {
         return true;
     }
 
-    private void addSubjectRestrictions(Set<Restriction> subjectRestrictions, String base, String table, Set<URI> subjectBindings) {
+    private void addSubjectRestrictions(Set<Restriction> subjectRestrictions, String base, String table, Set<IRI> subjectBindings) {
         Map<String, Set<String>> columnRestrictions = new HashMap<>();
-        for (URI uri: subjectBindings) {
-            String restrictionsString = CqlMapper.getRestrictionsFromSubjectURI(base, table, uri);
-            for (String restrictionString : StringUtils.split(restrictionsString,";")) {
-                String restriction[] = StringUtils.split(restrictionString, "=");
-                String name = restriction[0];
-                String value = restriction[1];
-                Set<String> set = columnRestrictions.get(name);
-                if (set == null) {
-                    columnRestrictions.put(name, new HashSet<>());
-                    set = columnRestrictions.get(name);
+        for (IRI uri: subjectBindings) {
+            try {
+                String restrictionsString = CqlMapper.getRestrictionsFromSubjectURI(base, table, uri);
+
+                for (String restrictionString : StringUtils.split(restrictionsString, ";")) {
+                    String restriction[] = StringUtils.split(restrictionString, "=");
+                    String name = restriction[0];
+                    String value = restriction[1];
+                    Set<String> set = columnRestrictions.get(name);
+                    if (set == null) {
+                        columnRestrictions.put(name, new HashSet<>());
+                        set = columnRestrictions.get(name);
+                    }
+                    set.add(value);
                 }
-                set.add(value);
+            } catch ( IllegalArgumentException e) {
+                // the uri is not joinable in this table
             }
         }
         for (String name: columnRestrictions.keySet()) {
@@ -253,7 +259,7 @@ public class CassandraQueryTransformer {
         public String toString() { return getRestrictionString(); }
     }
 
-    private class FilterRestrictionCollector extends QueryModelVisitorBase<RuntimeException> {
+    private class FilterRestrictionCollector extends AbstractQueryModelVisitor<RuntimeException> {
 
         final private String base;
         private Map<String, String> var2column;

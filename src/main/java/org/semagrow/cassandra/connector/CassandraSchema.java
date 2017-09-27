@@ -1,6 +1,6 @@
-package eu.semagrow.cassandra.connector;
+package org.semagrow.cassandra.connector;
 
-import eu.semagrow.cassandra.utils.Utils;
+import org.semagrow.cassandra.utils.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -103,6 +103,10 @@ public class CassandraSchema {
         return regularColumns.get(table);
     }
 
+    public Set<String> getAllColumns(String table) {
+        return Utils.union(getPublicKey(table), getRegularColumns(table));
+    }
+
     public boolean hasIndex(String table, String column) {
         return indexedColumns.get(table).contains(column);
     }
@@ -112,6 +116,13 @@ public class CassandraSchema {
     }
 
     public boolean tableContainsColumn(String table, String column) {
+        boolean flag = true;
+        if (table == null) {
+            for (String t: getTables()) {
+                flag = flag || tableContainsColumn(t,column);
+            }
+            return flag;
+        }
         return (partitionColumns.get(table).contains(column) ||
                 clusteringColumns.get(table).contains(column) ||
                 regularColumns.get(table).contains(column) );

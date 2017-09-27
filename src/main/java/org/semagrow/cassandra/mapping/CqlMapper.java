@@ -1,12 +1,12 @@
-package eu.semagrow.cassandra.mapping;
+package org.semagrow.cassandra.mapping;
 
-import eu.semagrow.cassandra.connector.CassandraSchema;
-import eu.semagrow.cassandra.vocab.CDT;
+import org.semagrow.cassandra.connector.CassandraSchema;
+import org.semagrow.cassandra.vocab.CDT;
 import org.apache.commons.lang3.tuple.Pair;
-import org.openrdf.model.Literal;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -20,7 +20,7 @@ public class CqlMapper {
      * Returns a table name from a URI.
      * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
      * */
-    public static String getTableFromURI(String base, URI predicate, CassandraSchema schema) {
+    public static String getTableFromURI(String base, IRI predicate, CassandraSchema schema) {
         Pair<String, String> pair = decompose(base, predicate);
         if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
             return pair.getLeft();
@@ -32,7 +32,7 @@ public class CqlMapper {
      * Returns a column name from a URI.
      * Extracts the local name of the URI, and verifies it by looking the CassandraSchema
      * */
-    public static String getColumnFromURI(String base, URI predicate, CassandraSchema schema) {
+    public static String getColumnFromURI(String base, IRI predicate, CassandraSchema schema) {
         Pair<String, String> pair = decompose(base, predicate);
         if (schema.tableContainsColumn(pair.getLeft(), pair.getRight())) {
             return pair.getRight();
@@ -44,7 +44,7 @@ public class CqlMapper {
      * Returns a table name from a URI.
      * Essentially extracts the local name of the URI
      * */
-    public static String getTableFromURI(String base, URI predicate) {
+    public static String getTableFromURI(String base, IRI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getLeft();
     }
@@ -53,7 +53,7 @@ public class CqlMapper {
      * Returns a column name from a URI.
      * Essentially extracts the local name of the URI
      * */
-    public static String getColumnFromURI(String base, URI predicate) {
+    public static String getColumnFromURI(String base, IRI predicate) {
         Pair<String, String> pair = decompose(base, predicate);
         return pair.getRight();
     }
@@ -61,7 +61,7 @@ public class CqlMapper {
     /**
      * Returns a cql substring that contains all relevant column restrictions
      */
-    public static String getRestrictionsFromSubjectURI(String base, String table, URI subject) {
+    public static String getRestrictionsFromSubjectURI(String base, String table, IRI subject) {
         Pair<String, String> pair = decompose(base, subject);
         if (pair.getLeft().equals(table)) {
             try {
@@ -81,7 +81,7 @@ public class CqlMapper {
      * @return
      */
     public static String getCqlValueFromValue(String base, Value v) {
-        if (v instanceof URI) {
+        if (v instanceof IRI) {
             if (v.stringValue().startsWith(base)) {
                 return v.stringValue().substring(base.length());
             }
@@ -115,7 +115,12 @@ public class CqlMapper {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Pair<String, String> decompose(String base, URI predicate) {
+    private static Pair<String, String> decompose(String base, IRI predicate) {
+
+        if (predicate == null) {
+            return Pair.of(null,null);
+        }
+        
         String value = predicate.stringValue();
         int columnStart = value.lastIndexOf("#") + 1;
         int predicateStart = value.lastIndexOf("/") + 1;
@@ -143,7 +148,7 @@ public class CqlMapper {
 
     private static boolean isNumeric(Literal l) {
 
-        URI dataType =l.getDatatype();
+        IRI dataType =l.getDatatype();
 
         return  dataType != null && (dataType.equals(XMLSchema.INTEGER)
                 || dataType.equals(XMLSchema.INT)

@@ -1,15 +1,15 @@
-package eu.semagrow.cassandra.eval;
+package org.semagrow.cassandra.eval;
 
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.parser.ParsedQuery;
-import org.openrdf.queryrender.QueryRenderer;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.parser.ParsedQuery;
+
 
 import java.util.Collections;
 
 /**
  * Created by angel on 21/4/2016.
  */
-public class CQLQueryRenderer implements QueryRenderer {
+public class CQLQueryRenderer  {
 
     private static QueryLanguage CQL = new QueryLanguage("CQL");
 

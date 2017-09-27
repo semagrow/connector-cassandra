@@ -1,4 +1,4 @@
-package eu.semagrow.cassandra.utils;
+package org.semagrow.cassandra.utils;
 
 import java.util.*;
 import java.util.stream.Collector;
@@ -26,7 +26,7 @@ public final class Utils {
 
     public static <T> Set<T> union(Set<T> p, Set<T> q) {
         Set<T> result = new HashSet<>(p);
-        p.addAll(q);
+        result.addAll(q);
         return result;
     }
 

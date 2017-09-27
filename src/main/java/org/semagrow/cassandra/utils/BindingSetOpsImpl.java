@@ -1,9 +1,9 @@
-package eu.semagrow.cassandra.utils;
+package org.semagrow.cassandra.utils;
 
-import eu.semagrow.core.eval.BindingSetOps;
-import org.openrdf.query.Binding;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.algebra.evaluation.QueryBindingSet;
+import org.semagrow.evaluation.BindingSetOps;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.algebra.evaluation.QueryBindingSet;
 
 import java.util.Collection;
 
@@ -19,7 +19,6 @@ public class BindingSetOpsImpl implements BindingSetOps {
      * @param second
      * @return A binding set that contains the union of the variable bindings of first and second set.
      */
-    @Override
     public BindingSet merge(BindingSet first, BindingSet second) {
         QueryBindingSet result = new QueryBindingSet();
 
@@ -44,7 +43,6 @@ public class BindingSetOpsImpl implements BindingSetOps {
      * @param vars
      * @return
      */
-    @Override
     public BindingSet project(Collection<String> vars, BindingSet bindings) {
         QueryBindingSet q = new QueryBindingSet();
 
@@ -57,23 +55,24 @@ public class BindingSetOpsImpl implements BindingSetOps {
         return q;
     }
 
-    @Override
+
     public BindingSet project(Collection<String> vars, BindingSet bindings, BindingSet parent) {
         return null;
     }
 
-    @Override
+
     public Collection<String> projectNames(Collection<String> vars, BindingSet bindings) {
         return null;
     }
 
-    @Override
+
     public boolean hasBNode(BindingSet bindings) {
         return false;
     }
 
-    @Override
+
     public boolean agreesOn(BindingSet first, BindingSet second) {
         return false;
     }
+
 }
