@@ -139,21 +139,36 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         CassandraQueryTransformer transformer = new CassandraQueryTransformer();
 
         String cqlQuery;
+        Stream<BindingSet> result;
 
-        if (bindingsList.isEmpty()) {
-            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
+        try {
+        	if (bindingsList.isEmpty()) {
+        		cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
+        	}
+        	else {
+        		cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
+        	}
+            CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
+
+            logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
+
+            result = Streams.from(client.execute(cqlQuery))
+                    .filter(transformer::containsAllFields)
+                    .map(transformer::getBindingSet);
+
         }
-        else {
-            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
+        catch( NullPointerException ex ) {
+        	// If the query cannot be expressed in CQL, then transformer::transformQuery() throws
+        	// NullPointerException. We log this, but proceed to respond as if the query simply did not
+        	// retrieve any results.
+            logger.warn("Could not transform query: {}", expr);
+        	result = Streams.empty();
         }
-
-        CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
-
-        logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
-
-        Stream<BindingSet> result = Streams.from(client.execute(cqlQuery))
-                .filter(transformer::containsAllFields)
-                .map(transformer::getBindingSet);
+        catch( Exception ex ) {
+            // Unexpected behaviour. Answering with empty responce but it needs invastigating
+            logger.warn("Unexpected behaviour");
+            result = Streams.empty();
+        }
 
         return result;
     }
