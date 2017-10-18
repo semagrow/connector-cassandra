@@ -139,21 +139,30 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
         CassandraQueryTransformer transformer = new CassandraQueryTransformer();
 
         String cqlQuery;
+        Stream<BindingSet> result;
 
-        if (bindingsList.isEmpty()) {
-            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
+        try {
+        	if (bindingsList.isEmpty()) {
+        		cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr);
+        	}
+        	else {
+        		cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
+        	}
+            CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
+
+            logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
+
+            result = Streams.from(client.execute(cqlQuery))
+                    .filter(transformer::containsAllFields)
+                    .map(transformer::getBindingSet);
+
         }
-        else {
-            cqlQuery = transformer.transformQuery(site.getBase(), site.getURI(), expr, bindingsList);
+        catch( Exception ex ) {
+        	// If the query cannot be expressed in CQL, then transformer::transformQuery() throws
+        	// XXXXException. We log this, but proceed to respond as if the query simply did not
+        	// retrieve any results. 
+        	result = Streams.empty();
         }
-
-        CassandraClient client = CassandraClient.getInstance(site.getAddress(), site.getPort(), site.getKeyspace());
-
-        logger.info("Sending CQL query: {} to {}:{}", cqlQuery, site.getAddress(), site.getPort());
-
-        Stream<BindingSet> result = Streams.from(client.execute(cqlQuery))
-                .filter(transformer::containsAllFields)
-                .map(transformer::getBindingSet);
 
         return result;
     }
