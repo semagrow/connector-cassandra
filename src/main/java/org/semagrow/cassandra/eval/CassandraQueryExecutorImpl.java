@@ -157,11 +157,17 @@ public class CassandraQueryExecutorImpl implements QueryExecutor {
                     .map(transformer::getBindingSet);
 
         }
-        catch( Exception ex ) {
+        catch( NullPointerException ex ) {
         	// If the query cannot be expressed in CQL, then transformer::transformQuery() throws
-        	// XXXXException. We log this, but proceed to respond as if the query simply did not
-        	// retrieve any results. 
+        	// NullPointerException. We log this, but proceed to respond as if the query simply did not
+        	// retrieve any results.
+            logger.warn("Could not transform query: {}", expr);
         	result = Streams.empty();
+        }
+        catch( Exception ex ) {
+            // Unexpected behaviour. Answering with empty responce but it needs invastigating
+            logger.warn("Unexpected behaviour");
+            result = Streams.empty();
         }
 
         return result;
